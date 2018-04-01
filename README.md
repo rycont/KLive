@@ -16,5 +16,12 @@ https://github.com/soju6jan/KLive/wiki
 
 ---
 ## 변경사항
+### Version 0.1.4 (2018-04-01)
+  - KODI / PLEX RADIO2 버그 수정
+  
+### Version 0.1.3 (2018-03-28)
+  - 일부 OS에서 m3u, xml 파일 쓰기가 안되는 문제 수정
+  
 ### Version 0.1.0 (2018-03-18)
   - First Release
+
