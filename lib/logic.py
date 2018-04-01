@@ -76,7 +76,7 @@ def GetChannelList(type):
 	if type == 'VIDEOPORTAL': list = VIDEOPORTAL().GetChannelList()
 	if type == 'EVERYON': list = EVERYON().GetChannelList()
 	if type == 'RADIO1': list = RADIO1().GetChannelList()
-	if type == 'RADIO2': list = RADIO2().GetChannelList()
+	if type == 'RADIO2': list = RADIO2(GetSetting('RADIO2_XML')).GetChannelList()
 	return list
 
 

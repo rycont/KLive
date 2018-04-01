@@ -104,5 +104,11 @@
 		"type": "enum",
 		"values":   ["4000", "2000", "1000"],
 		"default": "1000"
-	}
+	},
+	{
+		"id": "RADIO2_XML",
+		"label": "RADIO2_XML",
+		"type": "text",
+		"default": "https://soju6jan.github.io/radio2.xml"
+	},
 ]
