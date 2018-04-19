@@ -6,9 +6,10 @@ import pickle
 import time
 from util import *
 import datetime
+import pickle
 
 class OLLEH:
-	COOKIE_FILENAME = 'olleh.txt'
+	COOKIE_FILENAME = 'olleh2.txt'
 
 	# Login
 	def DoLoginFromSC(self, id, pw):
@@ -42,15 +43,25 @@ class OLLEH:
 			for cookie in cj:
 				ret += '%s=%s;' % (cookie.name, cookie.value)
 			cj.clear_session_cookies()
+			if ret != '':
+				dic = {}
+				dic['cookie'] = ret
+				file = open(GetFilename(self.COOKIE_FILENAME), 'wb')
+				pickle.dump(dic, file)
+				file.close()
 
-			WriteFile(GetFilename(self.COOKIE_FILENAME), ret)
+			#WriteFile(GetFilename(self.COOKIE_FILENAME), ret)
 		except Exception as e:
 			print(e)
 		return cookie
 
 	def GetLoginData(self):
 		try:
-			return ReadFile(GetFilename(self.COOKIE_FILENAME))
+			file = open(GetFilename(self.COOKIE_FILENAME), 'rb')
+			login = pickle.load(file)
+			file.close()
+			return login['cookie']
+			#return ReadFile(GetFilename(self.COOKIE_FILENAME))
 		except Exception, e:
 			pass
 		return None
@@ -80,7 +91,8 @@ class OLLEH:
 			if id[-1:] == 'A': 
 				id = id[:-1]
 				quality = '128' 
-			cookie = ReadFile(GetFilename(self.COOKIE_FILENAME))
+			cookie = self.GetLoginData()
+			#ReadFile(GetFilename(self.COOKIE_FILENAME))
 			params = {'istest': '0', 'ch_no': id, 'bit_rate': 'S', 'bit_rate_option': quality, 'user_model': 'Redmi', 'user_os': '6.0.1', 'user_type': 'Android', 'user_net': 'WIFI'}
 			url = 'http://menu.megatvdnp.co.kr:38080/app5/0/api/epg_play?%s' % urllib.urlencode( params )
 			request = urllib2.Request(url, headers = {'Cookie': cookie, 'User-Agent':'OMS (compatible;ServiceType/OTM;DeviceType/WIN8PAD;DeviceModel/AllSeries;OSType/WINM;OSVersion/8.1.0;AppVersion/1.2.1.5))'})
