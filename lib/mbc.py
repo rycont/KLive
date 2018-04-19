@@ -3,7 +3,7 @@ import urllib, urllib2, cookielib
 import json
 import os
 from util import *
-
+import pickle
 
 
 class MBC:
@@ -19,7 +19,7 @@ class MBC:
 		'08|MBC FM4U|N|mfm|http://img.pooq.co.kr/BMS/ChannelImg/MBCFM4U_730x411.jpg',
 		'09|MBC ChannelM|N|chm|' ]
 
-	COOKIE_FILENAME = 'mbc.txt'
+	COOKIE_FILENAME = 'mbc2.txt'
 	
 	# Login
 	def DoLogin(self, id, pw):
@@ -47,7 +47,12 @@ class MBC:
 		cj.clear_session_cookies()
 		if ret != '':
 			logindata = '%s=%s' % ('IMBCSession', ret)
-			WriteFile(GetFilename(self.COOKIE_FILENAME), logindata)
+			#WriteFile(GetFilename(self.COOKIE_FILENAME), logindata)
+			dic = {}
+			dic['cookie'] = logindata
+			file = open(GetFilename(self.COOKIE_FILENAME), 'wb')
+			pickle.dump(dic, file)
+			file.close()
 		return 
 	
 	def DoLoginFromSC(self, id, pw):
@@ -57,6 +62,17 @@ class MBC:
 		except Exception as e:
 			print(e)
 			pass
+
+	def GetLoginData(self):
+		try:
+			file = open(GetFilename(self.COOKIE_FILENAME), 'rb')
+			login = pickle.load(file)
+			file.close()
+			return login['cookie']
+			#return ReadFile(GetFilename(self.COOKIE_FILENAME))
+		except Exception, e:
+			pass
+		return None
 
 	# List
 	def GetChannelList(self, includeURL = False):
@@ -109,7 +125,8 @@ class MBC:
 				'dest_url' : param}
 		postdata = urllib.urlencode( params )
 		request = urllib2.Request(url, postdata)
-		cookie = ReadFile(GetFilename(self.COOKIE_FILENAME))
+		#cookie = ReadFile(GetFilename(self.COOKIE_FILENAME))
+		cookie = self.GetLoginData()
 		if cookie is not None:
 			request.add_header('Cookie', cookie)
 		response = urllib2.urlopen(request)
