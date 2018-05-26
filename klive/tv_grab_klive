@@ -1,9 +1,8 @@
 #!/bin/sh
 
 if [ "x$1" = "x" ]; then
-     wget -q -O klive.xml https://soju6jan.github.io/klive.xml
-     chmod 777 klive.xml
-     cat klive.xml
+     wget -q -O ~/klive.xml https://soju6jan.github.io/klive.xml
+     cat ~/klive.xml
     exit 0
 fi
 
