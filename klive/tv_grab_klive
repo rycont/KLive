@@ -1,8 +1,8 @@
 #!/bin/sh
 
 if [ "x$1" = "x" ]; then
-     wget -q -O /epg2xml/klive.xml http://soju6jan.synology.me/klive/klive.xml
-     cat /epg2xml/klive.xml
+     wget -q -O . https://soju6jan.github.io/klive.xml
+     cat klive.xml
     exit 0
 fi
 
