@@ -20,7 +20,7 @@ config = {
     'bindAddr': '',
     'bindPort': 5003,
 
-    'tvhURL': os.environ.get('TVH_URL') or '',
+    'tvhURL': os.environ.get('TVH_URL') or 'http://test:test@localhost:9981',
     'tunerCount': os.environ.get('TVH_TUNER_COUNT') or 6,  # number of tuners in tvh
     'tvhWeight': os.environ.get('TVH_WEIGHT') or 300,  # subscription priority
     'streamProfile': os.environ.get('TVH_PROFILE') or 'pass',  # specifiy a stream profile that you want to use for adhoc transcoding in tvh, e.g. mp4
