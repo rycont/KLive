@@ -3,6 +3,7 @@ import urllib, urllib2
 import json 
 import os
 import pickle
+import time, datetime
 from util import *
 
 class POOQ:
@@ -46,6 +47,13 @@ class POOQ:
 			if not os.path.isfile(GetFilename(self.COOKIE_FILENAME)):
 				ret = self.DoLogin(id, pw)
 				if ret is not None: WriteFile(GetFilename(self.COOKIE_FILENAME), ret)
+			else:	
+				create_time = os.path.getctime(GetFilename(self.COOKIE_FILENAME))
+				diff = time.gmtime(time.time() - create_time)
+				if diff.tm_mday > 7:
+					ret = self.DoLogin(id, pw)
+					if ret is not None: WriteFile(GetFilename(self.COOKIE_FILENAME), ret)
+
 		except Exception as e:
 			print(e)
 			pass
@@ -238,6 +246,7 @@ class POOQ:
 				str += '\t<programme start="%s00 +0900" stop="%s00 +0900" channel="POOQ|%s">\n' %  (startTime, endTime, item['id'])
 				#str += '\t\t<title lang="kr"><![CDATA[%s]]></title>\n' % epg['programTitle']
 				str += '\t\t<title lang="kr">%s</title>\n' % epg['programTitle'].replace('<',' ').replace('>',' ')
+				str += '\t\t<icon src="http://img.pooq.co.kr/BMS/program_poster/201802/%s_210.jpg" />\n' % epg['programId']
 				
 				age_str = '%s세 이상 관람가' % epg['age'] if epg['age'] != '0' else '전체 관람가'
 				str += '\t\t<rating system="KMRB"><value>%s</value></rating>\n' % age_str

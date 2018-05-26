@@ -191,56 +191,59 @@ class TVING:
 			str += '\t</channel>\n'
 
 			for date_param in [startParam, endParam]:
-				url = 'http://api.tving.com/v1/media/schedules/%s/%s?pageNo=1&pageSize=200&order=&scope=all&adult=&free=&broadcastDate=%s&broadTime=%s000000&channelCode=%s%s' % (item['id'],date_param,date_param,date_param, item['id'], self.DEFAULT_PARAM)
-				#print(url)
-				request = urllib2.Request(url)
-				response = urllib2.urlopen(request)
-				data = json.load(response, encoding='utf8')
-				#print(data)
-				#return
+				try:
+					url = 'http://api.tving.com/v1/media/schedules/%s/%s?pageNo=1&pageSize=200&order=&scope=all&adult=&free=&broadcastDate=%s&broadTime=%s000000&channelCode=%s%s' % (item['id'],date_param,date_param,date_param, item['id'], self.DEFAULT_PARAM)
+					#print(url)
+					request = urllib2.Request(url)
+					response = urllib2.urlopen(request)
+					data = json.load(response, encoding='utf8')
+					#print(data)
+					#return
 
-				#currentDate = startDate
-				for epg in data['body']['result']:
-					str += '\t<programme start="%s +0900" stop="%s +0900" channel="TVING|%s">\n' %  (epg['broadcast_start_time'], epg['broadcast_end_time'], item['id'])
+					#currentDate = startDate
+					for epg in data['body']['result']:
+						str += '\t<programme start="%s +0900" stop="%s +0900" channel="TVING|%s">\n' %  (epg['broadcast_start_time'], epg['broadcast_end_time'], item['id'])
 
-					name = epg['program']['name']['ko']
-					if 'episode' in epg and epg['episode'] is not None:
-						if 'frequency' in epg['episode']: 
-							#str += '\t\t<sub-title lang="kr">%s화</sub-title>\n' % epg['episode']['frequency']
-							name += ', %s화' % epg['episode']['frequency']
+						name = epg['program']['name']['ko']
+						if 'episode' in epg and epg['episode'] is not None:
+							if 'frequency' in epg['episode']: 
+								#str += '\t\t<sub-title lang="kr">%s화</sub-title>\n' % epg['episode']['frequency']
+								name += ', %s화' % epg['episode']['frequency']
 
-					str += '\t\t<title lang="kr">%s</title>\n' % name.replace('<',' ').replace('>',' ')
-					
-					grade = epg['program']['grade_code']
-					age_str = self.GRADE_STR[grade]
-					str += '\t\t<rating system="KMRB"><value>%s</value></rating>\n' % age_str
-					desc = '등급 : %s\n' % age_str
-
-					str += '\t\t<category lang="kr">%s</category>\n' % epg['program']['category1_name']['ko']
-					desc += '장르 : %s\n' % epg['program']['category1_name']['ko']
-					
-					actor = epg['program']['actor']
-					director = epg['program']['director']
-
-					if len(actor) != 0 or len(director) != 0: str += '\t\t<credits>\n'
-				
-					if len(actor) != 0:
-						for name in actor: str += '\t\t\t<actor>%s</actor>\n' % name.strip().replace('<',' ').replace('>',' ')
-						desc += '출연 : %s\n' % (','.join(actor))
-					if len(director) != 0:
-						for name in director: str += '\t\t\t<producer>%s</producer>\n' % name.strip().replace('<',' ').replace('>',' ')
-						desc += '연출 : %s\n' % (','.join(director))
-					if len(actor) != 0 or len(director) != 0: str += '\t\t</credits>\n'
-					
-					if 'episode' in epg and epg['episode'] is not None:
-						if epg['episode']['synopsis']['ko'] is not None:
-							desc += epg['episode']['synopsis']['ko']
-					else:
-						if epg['program']['synopsis']['ko'] is not None:
-							desc += epg['program']['synopsis']['ko']
+						str += '\t\t<title lang="kr">%s</title>\n' % name.replace('<',' ').replace('>',' ')
 						
+						grade = epg['program']['grade_code']
+						age_str = self.GRADE_STR[grade]
+						str += '\t\t<rating system="KMRB"><value>%s</value></rating>\n' % age_str
+						desc = '등급 : %s\n' % age_str
 
-					str += '\t\t<desc lang="kr">%s</desc>\n' % desc.strip().replace('<',' ').replace('>',' ')
-					str += '\t</programme>\n'
+						str += '\t\t<category lang="kr">%s</category>\n' % epg['program']['category1_name']['ko']
+						desc += '장르 : %s\n' % epg['program']['category1_name']['ko']
+						
+						actor = epg['program']['actor']
+						director = epg['program']['director']
+
+						if len(actor) != 0 or len(director) != 0: str += '\t\t<credits>\n'
+					
+						if len(actor) != 0:
+							for name in actor: str += '\t\t\t<actor>%s</actor>\n' % name.strip().replace('<',' ').replace('>',' ')
+							desc += '출연 : %s\n' % (','.join(actor))
+						if len(director) != 0:
+							for name in director: str += '\t\t\t<producer>%s</producer>\n' % name.strip().replace('<',' ').replace('>',' ')
+							desc += '연출 : %s\n' % (','.join(director))
+						if len(actor) != 0 or len(director) != 0: str += '\t\t</credits>\n'
+						
+						if 'episode' in epg and epg['episode'] is not None:
+							if epg['episode']['synopsis']['ko'] is not None:
+								desc += epg['episode']['synopsis']['ko']
+						else:
+							if epg['program']['synopsis']['ko'] is not None:
+								desc += epg['program']['synopsis']['ko']
+							
+
+						str += '\t\t<desc lang="kr">%s</desc>\n' % desc.strip().replace('<',' ').replace('>',' ')
+						str += '\t</programme>\n'
+				except:
+					pass
 		return str
 	

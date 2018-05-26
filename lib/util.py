@@ -43,6 +43,27 @@ def WriteFile(filename, data ):
 		#print('W22:%s' % e)
 		pass
 
+def AppendEPG(filename, data ):
+	data = data.replace('&amp;', '·')
+	data = data.replace('&', '·')
+
+	try:
+		with open(filename, "a") as f:
+			f.write( unicode(data) )
+		f.close()
+		return
+	except Exception as e:
+		#print('W11:%s' % e)
+		pass
+	try:
+		with open(filename, "a", encoding='utf8') as f:
+			f.write( data )
+		f.close()
+		return
+	except Exception as e:
+		#print('W22:%s' % e)
+		pass
+
 def GetFilename(filename):
 	ret = filename
 	try:
