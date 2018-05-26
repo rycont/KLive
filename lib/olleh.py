@@ -6,9 +6,10 @@ import pickle
 import time
 from util import *
 import datetime
+import pickle
 
 class OLLEH:
-	COOKIE_FILENAME = 'olleh.txt'
+	COOKIE_FILENAME = 'olleh2.txt'
 
 	# Login
 	def DoLoginFromSC(self, id, pw):
@@ -42,15 +43,25 @@ class OLLEH:
 			for cookie in cj:
 				ret += '%s=%s;' % (cookie.name, cookie.value)
 			cj.clear_session_cookies()
+			if ret != '':
+				dic = {}
+				dic['cookie'] = ret
+				file = open(GetFilename(self.COOKIE_FILENAME), 'wb')
+				pickle.dump(dic, file)
+				file.close()
 
-			WriteFile(GetFilename(self.COOKIE_FILENAME), ret)
+			#WriteFile(GetFilename(self.COOKIE_FILENAME), ret)
 		except Exception as e:
 			print(e)
 		return cookie
 
 	def GetLoginData(self):
 		try:
-			return ReadFile(GetFilename(self.COOKIE_FILENAME))
+			file = open(GetFilename(self.COOKIE_FILENAME), 'rb')
+			login = pickle.load(file)
+			file.close()
+			return login['cookie']
+			#return ReadFile(GetFilename(self.COOKIE_FILENAME))
 		except Exception, e:
 			pass
 		return None
@@ -80,7 +91,8 @@ class OLLEH:
 			if id[-1:] == 'A': 
 				id = id[:-1]
 				quality = '128' 
-			cookie = ReadFile(GetFilename(self.COOKIE_FILENAME))
+			cookie = self.GetLoginData()
+			#ReadFile(GetFilename(self.COOKIE_FILENAME))
 			params = {'istest': '0', 'ch_no': id, 'bit_rate': 'S', 'bit_rate_option': quality, 'user_model': 'Redmi', 'user_os': '6.0.1', 'user_type': 'Android', 'user_net': 'WIFI'}
 			url = 'http://menu.megatvdnp.co.kr:38080/app5/0/api/epg_play?%s' % urllib.urlencode( params )
 			request = urllib2.Request(url, headers = {'Cookie': cookie, 'User-Agent':'OMS (compatible;ServiceType/OTM;DeviceType/WIN8PAD;DeviceModel/AllSeries;OSType/WINM;OSVersion/8.1.0;AppVersion/1.2.1.5))'})
@@ -214,27 +226,3 @@ class OLLEH:
 		return result
 		"""
 
-	
-	
-
-
-#OLLEH().DoLoginFromSC('deuxist21c', 'bob0211!@#')
-#OLLEH().GetChannelList()
-#OLLEH().GetVodList('42908', '1')
-
-
-"""
-SSOValidate=0eff5cfd2389cc7824e453b053f7555a89c07e75afc5bfbe877f2fa552cae693c774f1089dbd6bea78291372f0e48b72c0cc7ad633a9a43e0fa4e2a75509e765
-BaseInfo="UserName=afa42aba25f23f7f7020a7a309774d85&CTN=b8c32632d23daabff96a20daca8a151f&ZipCode=b776f9c8697ac029&FreeUser=129b21274aeffc46&SUID=5a47c1dfe2e40f80b144569e06082f03&OTMSAID=f5b11ca2dcf9ca0670a8d5f8c0e96ba9&PhomePhone=b776f9c8697ac029&SvcKindCd=db658cf7a49bd5185e206aff0e0ef60f&SvcOfficeCd=b776f9c8697ac029"
-SubSvcInfo=447a1c10622bbb57a612551c2ea3e016e5bc52a50177363b9e58926a06a58fcc90abee385f1023022bd2eb912d261217
-BoSvcInfo=b776f9c8697ac029
-GroupSvcInfo=b9bf33376d627727
-
-
-#http://menu.megatvdnp.co.kr:38080/app5/0/api/epg_chCategory?istest=0
-{"data":{"list":[{"category_name":"","category_id":"1"},{"category_name":"","category_id":"2"},{"category_name":"/","category_id":"5"},{"category_name":"/","category_id":"6"},{"category_name":"/","category_id":"18"},{"category_name":"","category_id":"9"},{"category_name":"/","category_id":"19"},{"category_name":"/","category_id":"10"},{"category_name":"/","category_id":"11"},{"category_name":"","category_id":"7"},{"category_name":"","category_id":"20"},{"category_name":"","category_id":"12"},{"category_name":" 19+","category_id":"13"}]},"meta":{"code":"200"}}
-
-
-
-
-"""
