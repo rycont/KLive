@@ -3,8 +3,8 @@ Description=KLive Server
 
 [Service]
 Environment=
-WorkingDirectory=~/Klive/klive/
-ExecStart=~/Klive/klive/venv/bin/python ~/Klive/klive/kliveProxy.py
+WorkingDirectory=/home/soju6jan/Klive/klive/
+ExecStart=/home/soju6jan/Klive/klive/venv/bin/python /home/soju6jan/Klive/klive/kliveProxy.py
 Restart=always
 
 [Install]
