@@ -33,7 +33,7 @@ def MakeM3U(php):
 		if item == 'OLLEH': str += OLLEH().MakeM3U(php)
 		if item == 'TVING_VOD': str += TVING().MakeM3U(php, list_type=1)
 		if item == 'VIDEOPORTAL': str += VIDEOPORTAL().MakeM3U(php)
-	str = ChangeM3UForEPG(str)
+	#str = ChangeM3UForEPG(str)
 	if FILENAME_M3U != '':
 		WriteFile(FILENAME_M3U, str)
 	return str
@@ -62,34 +62,60 @@ def ChangeM3UForEPG(str):
 
 
 def MakeEPG():
+	if FILENAME_EPG == '':
+		return
 	temp = CONTENTS_LIST.split('|')
 	str = ''
 	str += '<?xml version="1.0" encoding="UTF-8"?>\n'
 	str += '<!DOCTYPE tv SYSTEM "xmltv.dtd">\n'
 	str += '<tv generator-info-name="sc">\n'
+	WriteFile(FILENAME_EPG, str)
 	file = None
 	for item in temp:
-		#if item == 'KBS': str += MakeEPG_KBS(file)
-		#if item == 'MBC': str += MakeEPG_MBC(file)
-		#if item == 'SBS': str += MakeEPG_SBS(file)
-		if item == 'POOQ': str += POOQ().MakeEPG(file)
-		if item == 'TVING': str += TVING().MakeEPG(file)
-		if item == 'OKSUSU': str += OKSUSU().MakeEPG(file)
-		if item == 'EVERYON': str += EVERYON().MakeEPG(file)
-		if item == 'OLLEH': str += OLLEH().MakeEPG(file)
-		if item == 'TVING_VOD': str += TVING().MakeEPG(file, list_type=1)
-		if item == 'VIDEOPORTAL': str += VIDEOPORTAL().MakeEPG(file)
-	str += '</tv>\n'
-	str = str.replace('&amp;', '·')
-	str = str.replace('&', '·')
-	if FILENAME_EPG != '':
-		WriteFile(FILENAME_EPG, str)
-	return str
+		try: 
+			if item == 'POOQ': 
+				str = POOQ().MakeEPG(file)
+				AppendEPG(FILENAME_EPG, str)
+		except: pass
+		try: 
+			if item == 'TVING': 
+				str = TVING().MakeEPG(file)
+				AppendEPG(FILENAME_EPG, str)
+		except: pass
+		try: 
+			if item == 'OKSUSU': 
+				str = OKSUSU().MakeEPG(file)
+				AppendEPG(FILENAME_EPG, str)
+		except: pass
+		try: 
+			if item == 'EVERYON': 
+				str = EVERYON().MakeEPG(file)
+				AppendEPG(FILENAME_EPG, str)
+		except: pass
+		try: 
+			if item == 'OLLEH': 
+				str = OLLEH().MakeEPG(file)
+				AppendEPG(FILENAME_EPG, str)
+		except: pass
+		try: 
+			if item == 'TVING_VOD': 
+				str = TVING().MakeEPG(file, list_type=1)
+				AppendEPG(FILENAME_EPG, str)
+		except: pass
+		try: 
+			if item == 'VIDEOPORTAL': 
+				str = VIDEOPORTAL().MakeEPG(file)
+				AppendEPG(FILENAME_EPG, str)
+		except: pass
+	str = '</tv>\n'
+	AppendEPG(FILENAME_EPG, str)
+	
+	return None
 
 
 def GetURL(type, id):
 	if type == 'SBS': 
-		SBS().DoLoginFromSC(SBS_ID, SBS_PW)
+		#SBS().DoLoginFromSC(SBS_ID, SBS_PW)
 		ret = SBS().GetURL(id)
 	elif type == 'EVERYON': 
 		ret = EVERYON().GetURLFromSC(id)
@@ -131,4 +157,5 @@ def main():
 	if ret is not None:
 		print(ret)
 
-main()
+if __name__ == '__main__':
+	main()
