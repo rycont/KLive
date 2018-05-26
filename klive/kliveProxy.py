@@ -17,10 +17,10 @@ from flask import Flask, Response, request, jsonify, abort, render_template, red
 app = Flask(__name__)
 
 config = {
-    'bindAddr': 'http://192.168.0.15',
+    'bindAddr': '',
     'bindPort': 5003,
 
-    'tvhURL': os.environ.get('TVH_URL') or 'http://soju6jan:dlgkdbs02!0@192.168.0.15:9981',
+    'tvhURL': os.environ.get('TVH_URL') or '',
     'tunerCount': os.environ.get('TVH_TUNER_COUNT') or 6,  # number of tuners in tvh
     'tvhWeight': os.environ.get('TVH_WEIGHT') or 300,  # subscription priority
     'streamProfile': os.environ.get('TVH_PROFILE') or 'pass',  # specifiy a stream profile that you want to use for adhoc transcoding in tvh, e.g. mp4
