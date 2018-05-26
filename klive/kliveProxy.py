@@ -147,7 +147,7 @@ def server_url():
 	type = request.args.get('type')
 	id = request.args.get('id').split('?')[0]
 	ret = GetURL(type, id)
-	print('URL : %s' % ret)
+	#print('URL : %s' % ret)
 	return redirect(ret, code=302)
 
 
