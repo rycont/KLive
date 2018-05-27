@@ -17,10 +17,10 @@ from flask import Flask, Response, request, jsonify, abort, render_template, red
 app = Flask(__name__)
 
 config = {
-    'bindAddr': '',
+    'bindAddr': 'http://localhost',
     'bindPort': 5003,
 
-    'tvhURL': os.environ.get('TVH_URL') or 'http://test:test@localhost:9981',
+    'tvhURL': os.environ.get('TVH_URL') or 'http://ID:PW@localhost:9981',
     'tunerCount': os.environ.get('TVH_TUNER_COUNT') or 6,  # number of tuners in tvh
     'tvhWeight': os.environ.get('TVH_WEIGHT') or 300,  # subscription priority
     'streamProfile': os.environ.get('TVH_PROFILE') or 'pass',  # specifiy a stream profile that you want to use for adhoc transcoding in tvh, e.g. mp4
@@ -87,10 +87,23 @@ def lineup():
         if c['enabled']:
 	    count += 1
             url = '%s/stream/channel/%s?profile=%s&weight=%s' % (config['tvhURL'], c['uuid'], config['streamProfile'],int(config['tvhWeight']))
+	    name = c['name']
+	   
+	    if config['icon'].find('pooq') != -1:
+		name = 'POOQ|' + name
+	    elif config['icon'].find('tving') != -1:
+		name = 'TVING|' + name
+	    elif config['icon'].find('oksusu') != -1:
+		name = 'OKSUSU|' + name
+	    elif config['icon'].find('megatvdnp') != -1:
+		name = 'OLLEH|' + name
+            elif config['icon'].find('210.182.60.11') != -1:
+		name = 'VIDEOPORTAL|' + name
+		
             lineup.append({
 		#'GuideNumber': str(c['number']), #채널번호를 넣었다면 이 주석을 풀고 아래줄 주석처리
 		'GuideNumber': str(count),
-                'GuideName': c['name'],
+                'GuideName': name,
                 'URL': url
             })
 
