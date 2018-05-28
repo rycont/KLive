@@ -102,6 +102,7 @@ class EVERYON:
 				request = urllib2.Request(url)
 				response = urllib2.urlopen(request)
 				data = response.read()
+				#print data
 
 				idx1 = data.find('<tbody>')
 				idx2 = data.find('</tbody>')

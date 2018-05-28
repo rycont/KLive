@@ -162,6 +162,7 @@ class OKSUSU:
 		str = ''
 		url = 'http://www.oksusu.com/api/live/channel?startTime=%s00&endTime=%s24' % (startParam, endParam)
 		#url = 'http://www.oksusu.com/api/live/channel?startTime=%s00&endTime=%s06' % (startParam, startParam)
+		#print url
 		request = urllib2.Request(url)
 		response = urllib2.urlopen(request)
 		data = json.load(response, encoding='utf8')
@@ -170,7 +171,9 @@ class OKSUSU:
 			str += '\t<channel id="OKSUSU|%s">\n' % channel['serviceId']
 			str += '\t\t<display-name>OKSUSU|%s</display-name>\n' % channel['channelName']
 			str += '\t</channel>\n'
-			
+			#isShoppingChannel = False
+			#if channel['channelName'].lower().find('shop') != -1 or channel['channelName'].lower().find('stoa') != -1 or channel['channelName'].find(u'쇼핑') != -1:
+			#	isShoppingChannel = True
 			currentDate = startDate
 			for epg in channel['programs']:
 				startTime = datetime.datetime.fromtimestamp(float(epg['startTime'])/1000.).strftime('%Y%m%d%H%M%S')
@@ -178,6 +181,8 @@ class OKSUSU:
 
 				str += '\t<programme start="%s +0900" stop="%s +0900" channel="OKSUSU|%s">\n' %  (startTime, endTime, channel['serviceId'])
 				str += '\t\t<title lang="kr">%s</title>\n' % epg['programName'].replace('<',' ').replace('>',' ')
+				#if item['music_yn'] == 'Y' or isShoppingChannel == False:
+				#	str += '\t\t<icon src="%s" />\n' % tmp_img
 				
 				age_str = '%s세 이상 관람가' % epg['ratingCd'] if epg['ratingCd'] != '0' and epg['ratingCd'] != '1' else '전체 관람가'
 				str += '\t\t<rating system="KMRB"><value>%s</value></rating>\n' % age_str
@@ -224,6 +229,7 @@ class OKSUSU:
 				str += '\t<channel id="OKSUSU|%s">\n' % item['id']
 				str += '\t\t<display-name>OKSUSU|%s</display-name>\n' % item['title']
 				str += '\t</channel>\n'
+				#http://www.oksusu.com/api/live/schedule?channelServiceId=240&startTime=20180527000000&endTime=2018052800000024&scheduleKey=key
 				url = 'http://www.oksusu.com/api/live/schedule?channelServiceId=%s&startTime=%s00&endTime=%s24&scheduleKey=key' % (item['id'], startParam, endParam)
 				request = urllib2.Request(url)
 				response = urllib2.urlopen(request)

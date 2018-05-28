@@ -211,6 +211,10 @@ class TVING:
 								name += ', %s화' % epg['episode']['frequency']
 
 						str += '\t\t<title lang="kr">%s</title>\n' % name.replace('<',' ').replace('>',' ')
+						try:
+							str += '\t\t<icon src="http://image.tving.com%s" />\n' % epg['program']['image'][0]['url']
+						except:
+							pass
 						
 						grade = epg['program']['grade_code']
 						age_str = self.GRADE_STR[grade]

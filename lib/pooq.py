@@ -228,9 +228,11 @@ class POOQ:
 			str += '\t<channel id="POOQ|%s">\n' % item['id']
 			str += '\t\t<display-name>POOQ|%s</display-name>\n' % item['title']
 			str += '\t</channel>\n'
-
+			isShoppingChannel = False
+			if item['title'].lower().find('shop') != -1 or item['title'].find(u'쇼핑') != -1:
+				isShoppingChannel = True
 			url = 'http://wapie.pooq.co.kr/v1/epgs30/%s/?deviceTypeId=pc&marketTypeId=generic&apiAccessCredential=EEBE901F80B3A4C4E5322D58110BE95C&drm=WC&country=KOR&offset=0&limit=1000&startTime=%s+00:00&pooqzoneType=none&credential=none&endTime=%s+00:00' % (item['id'], startParam, endParam)
-			
+			#print url
 			request = urllib2.Request(url)
 			response = urllib2.urlopen(request)
 			data = json.load(response, encoding='utf8')
@@ -246,7 +248,23 @@ class POOQ:
 				str += '\t<programme start="%s00 +0900" stop="%s00 +0900" channel="POOQ|%s">\n' %  (startTime, endTime, item['id'])
 				#str += '\t\t<title lang="kr"><![CDATA[%s]]></title>\n' % epg['programTitle']
 				str += '\t\t<title lang="kr">%s</title>\n' % epg['programTitle'].replace('<',' ').replace('>',' ')
-				str += '\t\t<icon src="http://img.pooq.co.kr/BMS/program_poster/201802/%s_210.jpg" />\n' % epg['programId']
+				
+				if item['isRadio'] == 'N' and isShoppingChannel == False:
+					tmp_img = 'http://img.pooq.co.kr/BMS/program_poster/201802/%s_210.jpg' % epg['programId']
+					try:
+						req2 = urllib2.Request(tmp_img)
+						res2 = urllib2.urlopen(req2)
+					except:
+						program = self.GetProgramInfo(epg['programId'])
+						if program == None:
+							tmp_img = None
+							#tmp_img = item['img']
+						else:
+							tmp_img = program['imageUrl']
+				else:
+					tmp_img = item['img']
+				if tmp_img is not None:
+					str += '\t\t<icon src="%s" />\n' % tmp_img
 				
 				age_str = '%s세 이상 관람가' % epg['age'] if epg['age'] != '0' else '전체 관람가'
 				str += '\t\t<rating system="KMRB"><value>%s</value></rating>\n' % age_str
@@ -267,3 +285,16 @@ class POOQ:
 				str += '\t\t<desc lang="kr">%s</desc>\n' % desc.strip().replace('<',' ').replace('>',' ')
 				str += '\t</programme>\n'
 		return str
+
+	def GetProgramInfo( self, programid):
+		#https://wapie.pooq.co.kr/v1/programs30/all/?credential=none&apiAccessCredential=EEBE901F80B3A4C4E5322D58110BE95C&country=KOR&deviceTypeId=pc&programId=C2301_PR10010790&marketTypeId=generic&drm=WC
+		try:
+			url = 'https://wapie.pooq.co.kr/v1/programs30/all/?credential=none&apiAccessCredential=EEBE901F80B3A4C4E5322D58110BE95C&country=KOR&deviceTypeId=pc&programId=%s&marketTypeId=generic&drm=WC' % (programid)
+			
+			request = urllib2.Request(url)
+			response = urllib2.urlopen(request)
+			data = json.load(response, encoding='utf8')
+			result = data['result']
+		except:
+			result = None
+		return result

@@ -142,14 +142,20 @@ class OLLEH:
 		#list = list[2:4]
 		
 		for channel in list:
+			
 			url = 'http://menu.megatvdnp.co.kr:38080/app5/0/api/epg_proglist?istest=&ch_no=%s' % channel['id']
+			#print url
 			request = urllib2.Request(url, headers = {'User-Agent':'OMS (compatible;ServiceType/OTM;DeviceType/WIN8PAD;DeviceModel/AllSeries;OSType/WINM;OSVersion/8.1.0;AppVersion/1.2.1.5))'})
 			response = urllib2.urlopen(request)
 			data = json.load(response, encoding="utf-8")
-
+			#print data
+		
 			str += '\t<channel id="OLLEH|%s">\n' % channel['id']
 			str += '\t\t<display-name>OLLEH|%s</display-name>\n' % channel['title']
 			str += '\t</channel>\n'
+			isShoppingChannel = False
+			if channel['title'].lower().find('shop') != -1 or channel['title'].find(u'쇼핑') != -1:
+				isShoppingChannel = True
 			
 			for epg in data['data']['list']:
 				startDate = datetime.datetime.strptime(epg['start_ymd'],"%Y%m%d")
@@ -160,7 +166,9 @@ class OLLEH:
 
 				str += '\t<programme start="%s +0900" stop="%s +0900" channel="OLLEH|%s">\n' %  (startTime, endTime, channel['id'])
 				str += '\t\t<title lang="kr">%s</title>\n' % urllib.unquote(epg['program_name'].encode('utf8')).replace('<',' ').replace('>',' ').replace('+', ' ')
-				
+				if item['isTv'] == 'N' or isShoppingChannel == False:
+					str += '\t\t<icon src="%s" />\n' % channel['img']
+					
 				age_str = '%s세 이상 관람가' % epg['rating'] if epg['rating'] != '0' else '전체 관람가'
 				str += '\t\t<rating system="KMRB"><value>%s</value></rating>\n' % age_str
 				desc = '등급 : %s\n' % age_str
