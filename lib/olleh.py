@@ -166,7 +166,7 @@ class OLLEH:
 
 				str += '\t<programme start="%s +0900" stop="%s +0900" channel="OLLEH|%s">\n' %  (startTime, endTime, channel['id'])
 				str += '\t\t<title lang="kr">%s</title>\n' % urllib.unquote(epg['program_name'].encode('utf8')).replace('<',' ').replace('>',' ').replace('+', ' ')
-				if item['isTv'] == 'N' or isShoppingChannel == False:
+				if channel['isTv'] == 'N' or isShoppingChannel == False:
 					str += '\t\t<icon src="%s" />\n' % channel['img']
 					
 				age_str = '%s세 이상 관람가' % epg['rating'] if epg['rating'] != '0' else '전체 관람가'
