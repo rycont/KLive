@@ -130,6 +130,7 @@ class TVING:
 		try:
 			#login2 = login['t'].split('=')[1] if login is not None and 't' in login else ''
 			#url =  self.PROXY_URL % (code, quality, login2)
+			token = urllib.unquote(token).decode('utf8')
 			url =  self.PROXY_URL % (code, quality, token)
 			request = urllib2.Request(url)
 			response = urllib2.urlopen(request)
