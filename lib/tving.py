@@ -120,18 +120,18 @@ class TVING:
 
 	# URL
 	PROXY_URL = 'http://soju6jan.synology.me/tving/tving.php?c=%s&q=%s&l=%s'
-	def GetURL(self, code, quality, token):
-		return self.GetBroadURL(code, quality, token)
-		#return self.GetBroadURL(code, quality, self.GetLoginData())
+	def GetURL(self, code, quality):
+		#return self.GetBroadURL(code, quality, token)
+		return self.GetBroadURL(code, quality, self.GetLoginData())
 		#return self.GetBroadURLDecrypt(code, quality, self.GetLoginData())
 	
-	#def GetBroadURL(self, code, quality, login ):
-	def GetBroadURL(self, code, quality, token ):
+	def GetBroadURL(self, code, quality, login ):
+	#def GetBroadURL(self, code, quality, token ):
 		try:
-			#login2 = login['t'].split('=')[1] if login is not None and 't' in login else ''
-			#url =  self.PROXY_URL % (code, quality, login2)
-			token = urllib.unquote(token).decode('utf8')
-			url =  self.PROXY_URL % (code, quality, token)
+			login2 = login['t'].split('=')[1] if login is not None and 't' in login else ''
+			url =  self.PROXY_URL % (code, quality, login2)
+			#token = urllib.unquote(token).decode('utf8')
+			#url =  self.PROXY_URL % (code, quality, token)
 			request = urllib2.Request(url)
 			response = urllib2.urlopen(request)
 			return response.read().strip()

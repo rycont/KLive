@@ -123,8 +123,9 @@ def GetURL(type, id):
 		POOQ().DoLoginFromSC(POOQ_ID, POOQ_PW)
 		ret = POOQ().GetURL(id, POOQ_QUALITY)
 	elif type == 'TVING':
-		#TVING().DoLoginFromSC(TVING_ID, TVING_PW, TVING_LOGIN_TYPE)
-		ret = TVING().GetURL(id, TVING_QUALITY, TVING_TOKEN)
+		TVING().DoLoginFromSC(TVING_ID, TVING_PW, TVING_LOGIN_TYPE)
+		#ret = TVING().GetURL(id, TVING_QUALITY, TVING_TOKEN)
+		ret = TVING().GetURL(id, TVING_QUALITY)
 	elif type == 'OKSUSU':
 		OKSUSU().DoLoginFromSC(OKSUSU_ID, OKSUSU_PW)
 		ret = OKSUSU().GetURLFromSC(id, OKSUSU_QUALITY)
