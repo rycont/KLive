@@ -26,6 +26,7 @@ class OKSUSU:
 				'accessToken' : '' }
 			postdata = urllib.urlencode( params )
 			request = urllib2.Request(url, postdata)
+			request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36')
 			response = urllib2.urlopen(request)
 			cookie = response.info().getheader('Set-Cookie')
 			for c in cookie.split(','):
@@ -56,6 +57,7 @@ class OKSUSU:
 			result = []
 			url = 'http://www.oksusu.com/api/live/organization/list?genreCode=99&orgaPropCode=ALL'
 			request = urllib2.Request(url)
+			request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36')
 			response = urllib2.urlopen(request)
 			data = json.load(response, encoding="utf-8")
 			radio = 'N'
@@ -85,6 +87,7 @@ class OKSUSU:
 			login = self.GetLoginData()
 			url = 'http://www.oksusu.com/v/' + code
 			request = urllib2.Request(url)
+			request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36')
 			if login is not None and 't' in login:
 				request.add_header('cookie', login['t'])
 			#request.add_header('cookie', ' ')
@@ -164,6 +167,7 @@ class OKSUSU:
 		#url = 'http://www.oksusu.com/api/live/channel?startTime=%s00&endTime=%s06' % (startParam, startParam)
 		#print url
 		request = urllib2.Request(url)
+		request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36')
 		response = urllib2.urlopen(request)
 		data = json.load(response, encoding='utf8')
 
@@ -232,6 +236,7 @@ class OKSUSU:
 				#http://www.oksusu.com/api/live/schedule?channelServiceId=240&startTime=20180527000000&endTime=2018052800000024&scheduleKey=key
 				url = 'http://www.oksusu.com/api/live/schedule?channelServiceId=%s&startTime=%s00&endTime=%s24&scheduleKey=key' % (item['id'], startParam, endParam)
 				request = urllib2.Request(url)
+				request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36')
 				response = urllib2.urlopen(request)
 				data = json.load(response, encoding='utf8')
 				currentDate = startDate
