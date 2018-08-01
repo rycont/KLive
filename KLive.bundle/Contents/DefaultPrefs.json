@@ -1,13 +1,13 @@
 [
 	{
 		"id": "VERSION",
-		"label": "VERSION : 0.1.4",
+		"label": "VERSION : 0.1.5",
 		"type": "bool",
 		"default": ""
 	},
 	{
 		"id": "MBC_ID",
-		"label": "MBC ID - v0.1.0",
+		"label": "MBC ID",
 		"type": "text",
 		"default": ""
 	},
