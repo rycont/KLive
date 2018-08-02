@@ -7,7 +7,7 @@ import time
 from util import *
 
 class OKSUSU:
-	COOKIE_FILENAME = 'oksusu.txt'
+	COOKIE_FILENAME = 'oksusu2.txt'
 
 	# Login
 	def DoLoginFromSC(self, id, pw):
