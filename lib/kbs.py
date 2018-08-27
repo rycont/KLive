@@ -15,8 +15,6 @@ class KBS:
 		idx2 = data.find(');', idx1)-1
 		data = data[idx1:idx2].replace('\\', '')
 		data = json.loads(data)
-		print data
-
 		for channel in data['channel']:
 			for channel_master in channel['channel_master']:
 				info = {}
