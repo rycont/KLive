@@ -45,6 +45,9 @@ https://github.com/soju6jan/KLive/wiki
 
 ---
 ## 변경사항
+#### 0.2.1 (2018-08-28)
+  - KBS 수정
+
 #### 0.1.4 (2018-04-01)
   - KODI / PLEX RADIO2 버그 수정
 
