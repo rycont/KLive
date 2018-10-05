@@ -20,7 +20,7 @@ class KBS:
 				info = {}
 				info['id'] = channel_master['channel_code']
 				info['title'] = channel_master['title']
-				info['isTv'] = 'Y' if channel_master['item'][0]['bitrate'].find('128') == -1 else 'N'
+				info['isTv'] = 'N' if len(channel_master['item']) > 0 and channel_master['item'][0]['bitrate'].find('128') != -1 else 'Y'
 				info['img'] = channel_master['image_path_channel_logo']
 				info['summary'] = '' # for kodi/plex addon
 				list.append(info)
