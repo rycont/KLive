@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
-import urllib, urllib2
-import json
 from util import *
 
 class KBS:
 	#LIST
-	def GetChannelList(self, includeURL = False):
+	def GetChannelList(self):
 		list = []
 		url = 'http://onair.kbs.co.kr'
 		request = urllib2.Request(url)
@@ -57,3 +55,41 @@ class KBS:
 			else :
 				str += M3U_RADIO_FORMAT % (tvgid, tvgname, item['img'], 'RADIO1', item['title'], url)				
 		return str
+
+	def MakeEPG(self, prefix, channel_list=None):
+		from pooq import *
+		list = self.GetChannelList()
+		str = ''
+		count = 0
+		type_count = 0
+		pooq = POOQ()
+		for item in self.GetChannelList():
+			count += 1
+			channel_number = count
+			channel_name = item['title']
+			if channel_list is not None:
+				if len(channel_list['KBS']) == type_count: break
+				if item['id'] in channel_list['KBS']:
+					type_count += 1
+					channel_number = channel_list['KBS'][item['id']]['num']
+					if len(channel_list['KBS'][item['id']]['name']) is not 0: channel_name = channel_list['KBS'][item['id']]['name']
+				else:
+					continue
+			print('KBS %s / %s make EPG' % (count, len(list)))
+			str += '\t<channel id="KBS|%s" video-src="%surl&type=KBS&id=%s" video-type="HLS">\n' % (item['id'], prefix, item['id'])
+			str += '\t\t<display-name>%s</display-name>\n' % channel_name
+			str += '\t\t<display-number>%s</display-number>\n' % channel_number
+			str += '\t\t<icon src="%s" />\n' % item['img']
+			str += '\t</channel>\n'
+			if item['id'] in self.pooq_id:
+				str += pooq.MakeEPG_ID(self.pooq_id[item['id']], 'KBS|%s' % item['id'])
+		return str
+
+	pooq_id = {
+			'11' : 'K01',
+			'12' : 'K02',
+			'N91' : 'K06',
+			'N92' : 'K04',
+			'N94' : 'K09',
+			'N93' : 'K05',
+		}

@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-import urllib, urllib2, cookielib
-import os
-import json
-import pickle
-import time
-import ssl
 from util import *
 
 class OKSUSU:
@@ -12,8 +6,17 @@ class OKSUSU:
 
 	# Login
 	def DoLoginFromSC(self, id, pw):
-		if not os.path.isfile(GetFilename(self.COOKIE_FILENAME)):
-			self.DoLogin(id, pw)
+		try:
+			if not os.path.isfile(GetFilename(self.COOKIE_FILENAME)):
+				self.DoLogin(id, pw)
+			else:
+				create_time = os.path.getctime(GetFilename(self.COOKIE_FILENAME))
+				diff = time.gmtime(time.time() - create_time)
+				if diff.tm_mday > 1:
+					self.DoLogin(id, pw)
+		except Exception as e:
+			#print(e)
+			pass
 
 	def DoLogin(self, user_id, user_pw ):
 		try:
@@ -117,8 +120,10 @@ class OKSUSU:
 			if 'nvodHlsUrlList' in js['streamUrl'] and js['streamUrl']['nvodHlsUrlList'] is not None:
 				vods = js['streamUrl']['nvodHlsUrlList']
 				if len(vods) > 0:
-					#for i in range(0, len(vods)-1):
-					#	info['VOD'][i] = vods['nvod_token']
+					info['VOD'] = vods[0]['nvod_token']
+			elif 'nvodUrlList' in js['streamUrl'] and js['streamUrl']['nvodUrlList'] is not None:
+				vods = js['streamUrl']['nvodUrlList']
+				if len(vods) > 0:
 					info['VOD'] = vods[0]['nvod_token']
 			return info
 		except Exception as e:
@@ -127,6 +132,9 @@ class OKSUSU:
 
 	def GetURLFromSC(self, code, quality):
 		url = self.GetURL(code)
+		# CH.
+		if url is None: return
+		if 'VOD' in url and url['VOD'] is not '': return url['VOD']
 		if quality == 'FHD' and url[quality] is None:
 			quality = 'HD'
 		if quality == 'HD' and url[quality] is None:
@@ -157,7 +165,7 @@ class OKSUSU:
 
 	# EPG
 	
-	def MakeEPG(self, filename):
+	def MakeEPG(self, prefix, channel_list=None):
 		#list = self.GetChannelList()
 		import datetime
 		startDate = datetime.datetime.now()
@@ -173,23 +181,50 @@ class OKSUSU:
 		request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36')
 		response = urllib2.urlopen(request)
 		data = json.load(response, encoding='utf8')
-
+		count = 300
+		type_count = 0
 		for channel in data['channels']:
-			str += '\t<channel id="OKSUSU|%s">\n' % channel['serviceId']
-			str += '\t\t<display-name>OKSUSU|%s</display-name>\n' % channel['channelName']
+			count += 1
+			channel_number = count
+			channel_name = channel['channelName']
+			if channel_list is not None:
+				if len(channel_list['OKSUSU']) == type_count: break
+				if channel['serviceId'] in channel_list['OKSUSU']:
+					type_count += 1
+					channel_number = channel_list['OKSUSU'][channel['serviceId']]['num']
+					if len(channel_list['OKSUSU'][channel['serviceId']]['name']) is not 0: channel_name = channel_list['OKSUSU'][channel['serviceId']]['name']
+				else:
+					continue
+
+			print('OKSUSU %s / %s make EPG' % (count, len(data['channels'])))
+			str += '\t<channel id="OKSUSU|%s" video-src="%slc&type=OKSUSU&id=%s" video-type="HLS2">\n' % (channel['serviceId'], prefix, channel['serviceId'])
+			str += '\t\t<display-name>%s</display-name>\n' % channel_name
+			str += '\t\t<display-number>%s</display-number>\n' % channel_number
+			str += '\t\t<icon src="http://image.oksusu.com:8080/thumbnails/image/0_0_F20/live/logo/387/%s" />\n' % channel['channelImageName']
 			str += '\t</channel>\n'
 			#isShoppingChannel = False
 			#if channel['channelName'].lower().find('shop') != -1 or channel['channelName'].lower().find('stoa') != -1 or channel['channelName'].find(u'쇼핑') != -1:
 			#	isShoppingChannel = True
 			currentDate = startDate
+
+
+
+			#continue
+
+
+
+
+
 			for epg in channel['programs']:
 				startTime = datetime.datetime.fromtimestamp(float(epg['startTime'])/1000.).strftime('%Y%m%d%H%M%S')
 				endTime = datetime.datetime.fromtimestamp(float(epg['endTime'])/1000.).strftime('%Y%m%d%H%M%S')
-
+				if long(startTime) >= long(endTime): continue
 				str += '\t<programme start="%s +0900" stop="%s +0900" channel="OKSUSU|%s">\n' %  (startTime, endTime, channel['serviceId'])
 				str += '\t\t<title lang="kr">%s</title>\n' % epg['programName'].replace('<',' ').replace('>',' ')
 				#if item['music_yn'] == 'Y' or isShoppingChannel == False:
 				#	str += '\t\t<icon src="%s" />\n' % tmp_img
+				if epg['extr_posterUrl'] != '':
+					str += '\t\t<icon src="%s" />\n' % epg['extr_posterUrl']
 				
 				age_str = '%s세 이상 관람가' % epg['ratingCd'] if epg['ratingCd'] != '0' and epg['ratingCd'] != '1' else '전체 관람가'
 				str += '\t\t<rating system="KMRB"><value>%s</value></rating>\n' % age_str
@@ -216,13 +251,14 @@ class OKSUSU:
 				
 				str += '\t\t<desc lang="kr">%s</desc>\n' % desc.strip().replace('<',' ').replace('>',' ')
 				str += '\t</programme>\n'
+			time.sleep(SLEEP_TIME)
 			
-		str += self.MakeEPGRadio(filename)	
+		str += self.MakeEPGRadio(prefix, count, channel_list)	
 		return str
 	
 
-	
-	def MakeEPGRadio(self, filename):
+	# 왜 나눴지..... 기억이 안남
+	def MakeEPGRadio(self, prefix, count, channel_list):
 		list = self.GetChannelList()
 		import datetime
 		startDate = datetime.datetime.now()
@@ -232,10 +268,23 @@ class OKSUSU:
 
 		str = ''
 		for item in list:
+			count += 1
 			if item['music_yn'] == 'Y':
-				str += '\t<channel id="OKSUSU|%s">\n' % item['id']
-				str += '\t\t<display-name>OKSUSU|%s</display-name>\n' % item['title']
+				channel_number = count
+				channel_name = item['title']
+				if channel_list is not None:
+					if item['id'] in channel_list['OKSUSU']:
+						channel_number = channel_list['OKSUSU'][item['id']]['num']
+						if len(channel_list['OKSUSU'][item['id']]['name']) is not 0: channel_name = channel_list['OKSUSU'][item['id']]['name']
+					else:
+						continue
+				print('OKSUSU RADIO %s / %s make EPG' % (count, len(list)))
+				str += '\t<channel id="OKSUSU|%s" video-src="%slc&type=OKSUSU&id=%s" video-type="HLS2">\n' % (item['id'], prefix, item['id'])
+				str += '\t\t<display-name>%s</display-name>\n' % channel_name
+				str += '\t\t<display-number>%s</display-number>\n' % channel_number
+				str += '\t\t<icon src="%s" />\n' % item['img']
 				str += '\t</channel>\n'
+
 				#http://www.oksusu.com/api/live/schedule?channelServiceId=240&startTime=20180527000000&endTime=2018052800000024&scheduleKey=key
 				url = 'http://www.oksusu.com/api/live/schedule?channelServiceId=%s&startTime=%s00&endTime=%s24&scheduleKey=key' % (item['id'], startParam, endParam)
 				request = urllib2.Request(url)
@@ -272,5 +321,6 @@ class OKSUSU:
 					
 					str += '\t\t<desc lang="kr">%s</desc>\n' % desc.strip().replace('<',' ').replace('>',' ')
 					str += '\t</programme>\n'
+				time.sleep(SLEEP_TIME)
 		return str
 	

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import urllib, urllib2
-import json
 from util import *
 
 class RADIO1:
@@ -57,6 +55,32 @@ class RADIO1:
 			tvgname = '%s|%s' % (type, temp[1])
 			str += M3U_RADIO_FORMAT % (tvgid, tvgname, '', type, temp[1], url)
 		return str
+
+	def MakeEPG(self, prefix, channel_list=None):
+		list = self.GetChannelList()
+		str = ''
+		count = 1200
+		type_count = 0
+		for item in self.GetChannelList():
+			count += 1
+			channel_number = count
+			channel_name = item['title']
+			#if len(channel_list['MBC']) == type_count: break
+			if channel_list is not None:
+				if item['id'] in channel_list['RADIO1']:
+					type_count += 1
+					channel_number = channel_list['RADIO1'][item['id']]['num']
+					if len(channel_list['RADIO1'][item['id']]['name']) is not 0: channel_name = channel_list['RADIO1'][item['id']]['name']
+				else:
+					continue
+			print('RADIO1 %s / %s make EPG' % (count, len(list)))
+			str += '\t<channel id="RADIO1|%s" video-src="%surl&type=RADIO1&id=%s" video-type="HLS">\n' % (item['id'], prefix, item['id'])
+			str += '\t\t<display-name>%s</display-name>\n' % channel_name
+			str += '\t\t<display-number>%s</display-number>\n' % channel_number
+			if len(item['img']) != 0: str += '\t\t<icon src="%s" />\n' % item['img']
+			str += '\t</channel>\n'
+		return str
+
 
 
 class RADIO2:

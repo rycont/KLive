@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
-import urllib, urllib2, cookielib
-import os
-import json
-import pickle
-import time
 from util import *
-import datetime
-import pickle
 
 class OLLEH:
 	COOKIE_FILENAME = 'olleh2.txt'
 
 	# Login
 	def DoLoginFromSC(self, id, pw):
-		if not os.path.isfile(GetFilename(self.COOKIE_FILENAME)):
-			self.DoLogin(id, pw)
+		try:
+			if not os.path.isfile(GetFilename(self.COOKIE_FILENAME)):
+				self.DoLogin(id, pw)
+			else:	
+				create_time = os.path.getctime(GetFilename(self.COOKIE_FILENAME))
+				diff = time.gmtime(time.time() - create_time)
+				if diff.tm_mday > 1:
+					self.DoLogin(id, pw)
+		except:
+			pass
 
 	def DoLogin(self, id, pw ):
 		timestamp = str(datetime.datetime.today().strftime('%Y%m%d%H%M%S%f')[:-3])
@@ -124,7 +125,7 @@ class OLLEH:
 		return str
 
 	# EPG
-	def MakeEPG(self, filename):
+	def MakeEPG(self, prefix, channel_list=None):
 		import datetime
 		startDate = datetime.datetime.now()
 		startParam = startDate.strftime('%Y%m%d')
@@ -140,35 +141,50 @@ class OLLEH:
 
 		list = self.GetChannelList()
 		#list = list[2:4]
-		
+		count = 500
+		type_count = 0
 		for channel in list:
-			
+			count += 1
+			channel_number = count
+			channel_name = channel['title']
+			if channel_list is not None:
+				if len(channel_list['OLLEH']) == type_count: break
+				if channel['id'] in channel_list['OLLEH']:
+					type_count += 1
+					channel_number = channel_list['OLLEH'][channel['id']]['num']
+					if len(channel_list['OLLEH'][channel['id']]['name']) is not 0: channel_name = channel_list['OLLEH'][channel['id']]['name']
+				else:
+					continue
+
+			print('OLLEH %s / %s make EPG' % (count, len(list)))
+			str += '\t<channel id="OLLEH|%s" video-src="%slc&type=OLLEH&id=%s" video-type="HLS2">\n' % (channel['id'], prefix, channel['id'])
+			str += '\t\t<display-name>%s</display-name>\n' % channel_name
+			str += '\t\t<display-number>%s</display-number>\n' % channel_number
+			str += '\t\t<icon src="%s" />\n' % channel['img']
+			str += '\t</channel>\n'
+
 			url = 'http://menu.megatvdnp.co.kr:38080/app5/0/api/epg_proglist?istest=&ch_no=%s' % channel['id']
-			#print url
 			request = urllib2.Request(url, headers = {'User-Agent':'OMS (compatible;ServiceType/OTM;DeviceType/WIN8PAD;DeviceModel/AllSeries;OSType/WINM;OSVersion/8.1.0;AppVersion/1.2.1.5))'})
 			response = urllib2.urlopen(request)
 			data = json.load(response, encoding="utf-8")
-			#print data
-		
-			str += '\t<channel id="OLLEH|%s">\n' % channel['id']
-			str += '\t\t<display-name>OLLEH|%s</display-name>\n' % channel['title']
-			str += '\t</channel>\n'
-			isShoppingChannel = False
-			if channel['title'].lower().find('shop') != -1 or channel['title'].find(u'쇼핑') != -1:
-				isShoppingChannel = True
+	
 			
+
+			#continue
+
+
 			for epg in data['data']['list']:
 				startDate = datetime.datetime.strptime(epg['start_ymd'],"%Y%m%d")
 				startTime = '%s%s00' % (epg['start_ymd'],epg['start_time'].replace(':', ''))
 				if int(epg['start_time'].replace(':', '')) > int(epg['end_time'].replace(':', '')):
 					startDate = startDate + datetime.timedelta(days=1)
 				endTime = '%s%s00' % (startDate.strftime('%Y%m%d'), epg['end_time'].replace(':', ''))
-
+				if long(startTime) >= long(endTime): continue
 				str += '\t<programme start="%s +0900" stop="%s +0900" channel="OLLEH|%s">\n' %  (startTime, endTime, channel['id'])
 				str += '\t\t<title lang="kr">%s</title>\n' % urllib.unquote(epg['program_name'].encode('utf8')).replace('<',' ').replace('>',' ').replace('+', ' ')
-				if channel['isTv'] == 'N' or isShoppingChannel == False:
-					str += '\t\t<icon src="%s" />\n' % channel['img']
-					
+				# 에피소드 이미지 없음
+				#str += '\t\t<icon src="%s" />\n' % epg['ch_image_detail']
+				
 				age_str = '%s세 이상 관람가' % epg['rating'] if epg['rating'] != '0' else '전체 관람가'
 				str += '\t\t<rating system="KMRB"><value>%s</value></rating>\n' % age_str
 				desc = '등급 : %s\n' % age_str
@@ -190,12 +206,12 @@ class OLLEH:
 						if actor.strip() != '': str += '\t\t\t<producer>%s</producer>\n' % actor.strip().replace('<',' ').replace('>',' ')
 					desc += '연출 : %s\n' % directorName
 				if actorName is not None or directorName is not None: str += '\t\t</credits>\n'
-
+				# summary  없음
 				desc += urllib.unquote(epg['program_subname'].encode('utf8')).replace('+', ' ')
 
 				str += '\t\t<desc lang="kr">%s</desc>\n' % desc.strip().replace('<',' ').replace('>',' ')
 				str += '\t</programme>\n'
-			
+			time.sleep(SLEEP_TIME)
 		return str
 
 	#라이브 카테고리 리스트

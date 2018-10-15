@@ -20,7 +20,7 @@ class SBS:
 		'S18|SBS 러브FM 보라|B|http://img.pooq.co.kr/BMS/ChannelImg/SBSloveFM_730x411.jpg' 
 		]
 	
-	COOKIE_FILENAME = 'sbs.txt'
+	COOKIE_FILENAME = 'sbs2.txt'
 
 	#Login
 	def DoLogin(self, id, pw):
@@ -52,15 +52,22 @@ class SBS:
 				ret = cookie.value
 				break
 		cj.clear_session_cookies()
-		if ret != '':
+		#if ret != '':
 			#logindata = '%s=%s' % ('LOGIN_JWT', ret)
-			WriteFile(self.COOKIE_FILENAME, ret)
+			#WriteFile(self.COOKIE_FILENAME, ret)
 		return ret
 	
 	def DoLoginFromSC(self, id, pw):
 		try:
-			if not os.path.isfile(self.COOKIE_FILENAME):
-				data = self.DoLogin(id, pw)
+			if not os.path.isfile(GetFilename(self.COOKIE_FILENAME)):
+				ret = self.DoLogin(id, pw)
+				if len(ret) != 0: WriteFile(GetFilename(self.COOKIE_FILENAME), ret)
+			else:	
+				create_time = os.path.getctime(GetFilename(self.COOKIE_FILENAME))
+				diff = time.gmtime(time.time() - create_time)
+				if diff.tm_mday > 1:
+					ret = self.DoLogin(id, pw)
+					if len(ret) != 0: WriteFile(GetFilename(self.COOKIE_FILENAME), ret)
 		except Exception as e:
 			#print(e)
 			pass
@@ -93,7 +100,8 @@ class SBS:
 	# URL
 	def GetURL(self, id):
 		try:
-			token = ReadFile(self.COOKIE_FILENAME)
+			token = ReadFile(GetFilename(self.COOKIE_FILENAME)) if os.path.exists ( GetFilename(self.COOKIE_FILENAME) ) else ''
+
 			url = 'http://apis.sbs.co.kr/play-api/1.0/onair/channel/%s?v_type=2&platform=pcweb&protocol=hls&jwt-token=%s' % (id, token)
 			request = urllib2.Request(url)
 			response = urllib2.urlopen(request)
@@ -114,10 +122,53 @@ class SBS:
 			tvgid = '%s|%s' % (type, temp[0])
 			#tvgname = '%s|%s' % (type, temp[1])
 			t = temp[1].replace('보라', '').strip()
-			tvgname = '%s|%s' % ('POOQ', t)
+			tvgname = '%s|%s' % ('SBS', t)
 			if temp[2] == 'Y':
 				str += M3U_FORMAT % (tvgid, tvgname, temp[3], type, temp[1], url)
 			else :
 				str += M3U_RADIO_FORMAT % (tvgid, tvgname, temp[3], 'RADIO1', temp[1], url)
 				
 		return str
+
+	def MakeEPG(self, prefix, channel_list=None):
+		from pooq import *
+		list = self.GetChannelList()
+		str = ''
+		count = 90
+		type_count = 0
+		pooq = POOQ()
+
+		for item in self.GetChannelList():
+			count += 1
+			channel_number = count
+			channel_name = item['title']
+			if channel_list is not None:
+				if len(channel_list['SBS']) == type_count: break
+				if item['id'] in channel_list['SBS']:
+					type_count += 1
+					channel_number = channel_list['SBS'][item['id']]['num']
+					if len(channel_list['SBS'][item['id']]['name']) is not 0: channel_name = channel_list['SBS'][item['id']]['name']
+				else:
+					continue
+			print('SBS %s / %s make EPG' % (count, len(list)))
+			str += '\t<channel id="SBS|%s" video-src="%surl&type=SBS&id=%s" video-type="HLS">\n' % (item['id'], prefix, item['id'])
+			str += '\t\t<display-name>%s</display-name>\n' % channel_name
+			str += '\t\t<display-number>%s</display-number>\n' % channel_number
+			str += '\t\t<icon src="%s" />\n' % item['img']
+			str += '\t</channel>\n'
+
+			if item['id'] in self.pooq_id:
+				str += pooq.MakeEPG_ID(self.pooq_id[item['id']], 'SBS|%s' % item['id'])
+
+		return str
+
+	pooq_id = {
+			'S01' : 'S01',
+			'S03' : 'S03',
+			'S02' : 'S02',
+			'S06' : 'S06',
+			'S04' : 'S04',
+			'S09' : 'S09',
+			'S07' : 'S07',
+			'S08' : 'S08',
+		}

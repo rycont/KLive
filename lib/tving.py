@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
-import urllib, urllib2, cookielib
-import os
-import json
-import pickle
 from util import *
 
-import time
-
 class TVING:
-	COOKIE_FILENAME = 'tving.txt'
+	COOKIE_FILENAME = 'tving2.txt'
 
 	DEFAULT_PARAM = '&screenCode=CSSD0100&networkCode=CSND0900&osCode=CSOD0900&teleCode=CSCD0900&apiKey=1e7952d0917d6aab1f0293a063697610'
 	QUALITYS = {'FHD':'stream50', 'HD':'stream40', 'SD':'stream30'}
@@ -51,6 +45,11 @@ class TVING:
 		try:
 			if not os.path.isfile(GetFilename(self.COOKIE_FILENAME)):
 				self.DoLogin(id, pw, type)
+			else:
+				create_time = os.path.getctime(GetFilename(self.COOKIE_FILENAME))
+				diff = time.gmtime(time.time() - create_time)
+				if diff.tm_mday > 1:
+					self.DoLogin(id, pw, type)
 		except Exception as e:
 			#print(e)
 			pass
@@ -120,18 +119,14 @@ class TVING:
 
 	# URL
 	PROXY_URL = 'http://soju6jan.synology.me/tving/tving.php?c=%s&q=%s&l=%s'
-	def GetURL(self, code, quality):
-		#return self.GetBroadURL(code, quality, token)
+	def GetURL(self, code, quality ):
 		return self.GetBroadURL(code, quality, self.GetLoginData())
 		#return self.GetBroadURLDecrypt(code, quality, self.GetLoginData())
 	
 	def GetBroadURL(self, code, quality, login ):
-	#def GetBroadURL(self, code, quality, token ):
 		try:
 			login2 = login['t'].split('=')[1] if login is not None and 't' in login else ''
 			url =  self.PROXY_URL % (code, quality, login2)
-			#token = urllib.unquote(token).decode('utf8')
-			#url =  self.PROXY_URL % (code, quality, token)
 			request = urllib2.Request(url)
 			response = urllib2.urlopen(request)
 			return response.read().strip()
@@ -180,7 +175,8 @@ class TVING:
 			'CPTG0300' : '12세 이상 관람가',
 			'CPTG0400' : '15세 이상 관람가',
 			'CPTG0500' : '19세 이상 관람가'}
-	def MakeEPG(self, filename, list_type=0):
+	
+	def MakeEPG(self, prefix, list_type=0, channel_list=None):
 		list = self.GetChannelList(list_type)
 		import datetime
 		startDate = datetime.datetime.now()
@@ -189,69 +185,104 @@ class TVING:
 		endParam = endDate.strftime('%Y%m%d')
 
 		str = ''
+		count = 200 if list_type == 0 else 900
+		type_count = 0
 		for item in list:
-			str += '\t<channel id="TVING|%s">\n' % item['id']
-			str += '\t\t<display-name>TVING|%s</display-name>\n' % item['title']
-			str += '\t</channel>\n'
+			try:
+				count += 1
+				channel_number = count
+				channel_name = item['title']
+				if channel_list is not None:
+					if len(channel_list['TVING']) == type_count: break
+					if item['id'] in channel_list['TVING']:
+						type_count += 1
+						channel_number = channel_list['TVING'][item['id']]['num']
+						if len(channel_list['TVING'][item['id']]['name']) is not 0: channel_name = channel_list['TVING'][item['id']]['name']
+					else:
+						continue
 
-			for date_param in [startParam, endParam]:
+				if item['id'] in ['C07381', 'C04601', 'C07382']: continue
+				print('TVING %s / %s make EPG' % (count, len(list)))
+				str += '\t<channel id="TVING|%s" video-src="%surl&type=TVING&id=%s" video-type="HLS">\n' % (item['id'], prefix, item['id'])
+				str += '\t\t<display-name>%s</display-name>\n' % channel_name
+				str += '\t\t<display-number>%s</display-number>\n' % channel_number
+				str += '\t\t<icon src="%s" />\n' % item['img']
+				str += '\t</channel>\n'
+
+
+				#continue
 				try:
-					url = 'http://api.tving.com/v1/media/schedules/%s/%s?pageNo=1&pageSize=200&order=&scope=all&adult=&free=&broadcastDate=%s&broadTime=%s000000&channelCode=%s%s' % (item['id'],date_param,date_param,date_param, item['id'], self.DEFAULT_PARAM)
-					#print(url)
-					request = urllib2.Request(url)
-					response = urllib2.urlopen(request)
-					data = json.load(response, encoding='utf8')
-					#print(data)
-					#return
-
-					#currentDate = startDate
-					for epg in data['body']['result']:
-						str += '\t<programme start="%s +0900" stop="%s +0900" channel="TVING|%s">\n' %  (epg['broadcast_start_time'], epg['broadcast_end_time'], item['id'])
-
-						name = epg['program']['name']['ko']
-						if 'episode' in epg and epg['episode'] is not None:
-							if 'frequency' in epg['episode']: 
-								#str += '\t\t<sub-title lang="kr">%s화</sub-title>\n' % epg['episode']['frequency']
-								name += ', %s화' % epg['episode']['frequency']
-
-						str += '\t\t<title lang="kr">%s</title>\n' % name.replace('<',' ').replace('>',' ')
-						try:
-							str += '\t\t<icon src="http://image.tving.com%s" />\n' % epg['program']['image'][0]['url']
-						except:
-							pass
-						
-						grade = epg['program']['grade_code']
-						age_str = self.GRADE_STR[grade]
-						str += '\t\t<rating system="KMRB"><value>%s</value></rating>\n' % age_str
-						desc = '등급 : %s\n' % age_str
-
-						str += '\t\t<category lang="kr">%s</category>\n' % epg['program']['category1_name']['ko']
-						desc += '장르 : %s\n' % epg['program']['category1_name']['ko']
-						
-						actor = epg['program']['actor']
-						director = epg['program']['director']
-
-						if len(actor) != 0 or len(director) != 0: str += '\t\t<credits>\n'
+					for date_param in [startParam, endParam]:
 					
-						if len(actor) != 0:
-							for name in actor: str += '\t\t\t<actor>%s</actor>\n' % name.strip().replace('<',' ').replace('>',' ')
-							desc += '출연 : %s\n' % (','.join(actor))
-						if len(director) != 0:
-							for name in director: str += '\t\t\t<producer>%s</producer>\n' % name.strip().replace('<',' ').replace('>',' ')
-							desc += '연출 : %s\n' % (','.join(director))
-						if len(actor) != 0 or len(director) != 0: str += '\t\t</credits>\n'
+						url = 'http://api.tving.com/v1/media/schedules/%s/%s?pageNo=1&pageSize=200&order=&scope=all&adult=&free=&broadcastDate=%s&broadTime=%s000000&channelCode=%s%s' % (item['id'],date_param,date_param,date_param, item['id'], self.DEFAULT_PARAM)
+						#print(url)
+						request = urllib2.Request(url)
+						response = urllib2.urlopen(request)
+						#print response.read().encode('euc-kr')
+						#return
+						data = json.load(response, encoding='utf8')
+						#print(data)
+						#return
+
+						#currentDate = startDate
+						for epg in data['body']['result']:
+							if long(epg['broadcast_start_time']) >= long(epg['broadcast_end_time']): continue
+							str += '\t<programme start="%s +0900" stop="%s +0900" channel="TVING|%s">\n' %  (epg['broadcast_start_time'], epg['broadcast_end_time'], item['id'])
+
+							name = epg['program']['name']['ko']
+							if 'episode' in epg and epg['episode'] is not None:
+								if 'frequency' in epg['episode']: 
+									#str += '\t\t<sub-title lang="kr">%s화</sub-title>\n' % epg['episode']['frequency']
+									name += ', %s화' % epg['episode']['frequency']
+
+							str += '\t\t<title lang="kr">%s</title>\n' % name.replace('<',' ').replace('>',' ')
 						
-						if 'episode' in epg and epg['episode'] is not None:
-							if epg['episode']['synopsis']['ko'] is not None:
-								desc += epg['episode']['synopsis']['ko']
-						else:
-							if epg['program']['synopsis']['ko'] is not None:
-								desc += epg['program']['synopsis']['ko']
+							if len(epg['program']['image']) > 0:
+								str += '\t\t<icon src="http://image.tving.com%s" />\n' % epg['program']['image'][0]['url']
+
+
+							grade = epg['program']['grade_code']
+							age_str = self.GRADE_STR[grade]
+							str += '\t\t<rating system="KMRB"><value>%s</value></rating>\n' % age_str
+							desc = '등급 : %s\n' % age_str
+
+							str += '\t\t<category lang="kr">%s</category>\n' % epg['program']['category1_name']['ko']
+							desc += '장르 : %s\n' % epg['program']['category1_name']['ko']
+						
+							actor = epg['program']['actor']
+							director = epg['program']['director']
+
+							if len(actor) != 0 or len(director) != 0: str += '\t\t<credits>\n'
+					
+							if len(actor) != 0:
+								for name in actor: str += '\t\t\t<actor>%s</actor>\n' % name.strip().replace('<',' ').replace('>',' ')
+								desc += '출연 : %s\n' % (','.join(actor))
+							if len(director) != 0:
+								for name in director: str += '\t\t\t<producer>%s</producer>\n' % name.strip().replace('<',' ').replace('>',' ')
+								desc += '연출 : %s\n' % (','.join(director))
+							if len(actor) != 0 or len(director) != 0: str += '\t\t</credits>\n'
+						
+							if 'episode' in epg and epg['episode'] is not None:
+								if epg['episode']['synopsis']['ko'] is not None:
+									#desc += epg['episode']['synopsis']['ko']
+									desc = epg['episode']['synopsis']['ko'] + '\n' + desc
+									desc == desc.strip()
+							else:
+								if epg['program']['synopsis']['ko'] is not None:
+									#desc += epg['program']['synopsis']['ko']
+									desc = epg['program']['synopsis']['ko'] + '\n' + desc
+									desc == desc.strip()
 							
 
-						str += '\t\t<desc lang="kr">%s</desc>\n' % desc.strip().replace('<',' ').replace('>',' ')
-						str += '\t</programme>\n'
+							str += '\t\t<desc lang="kr">%s</desc>\n' % desc.strip().replace('<',' ').replace('>',' ')
+							str += '\t</programme>\n'
+						time.sleep(SLEEP_TIME)
 				except:
-					pass
+					exc_info = sys.exc_info()
+					traceback.print_exception(*exc_info)
+			except:
+				exc_info = sys.exc_info()
+				traceback.print_exception(*exc_info)
+				#print str
 		return str
 	

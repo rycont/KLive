@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-import urllib, urllib2, cookielib
-import json
-import os
 from util import *
-import pickle
+
 
 
 class MBC:
@@ -154,3 +151,37 @@ class MBC:
 				str += M3U_RADIO_FORMAT % (tvgid, tvgname, item['img'], 'RADIO1', item['title'], url)
 		return str
 
+	def MakeEPG(self, prefix, channel_list=None):
+		from pooq import *
+		list = self.GetChannelList()
+		str = ''
+		count = 80
+		type_count = 0
+		pooq = POOQ()
+		for item in self.GetChannelList():
+			count += 1
+			channel_number = count
+			channel_name = item['title']
+			#if len(channel_list['MBC']) == type_count: break
+			if channel_list is not None:
+				if item['id'] in channel_list['MBC']:
+					type_count += 1
+					channel_number = channel_list['MBC'][item['id']]['num']
+					if len(channel_list['MBC'][item['id']]['name']) is not 0: channel_name = channel_list['MBC'][item['id']]['name']
+				else:
+					continue
+			print('MBC %s / %s make EPG' % (count, len(list)))
+			str += '\t<channel id="MBC|%s" video-src="%surl&type=MBC&id=%s" video-type="HLS">\n' % (item['id'], prefix, item['id'])
+			str += '\t\t<display-name>%s</display-name>\n' % channel_name
+			str += '\t\t<display-number>%s</display-number>\n' % channel_number
+			if len(item['img']) != 0: str += '\t\t<icon src="%s" />\n' % item['img']
+			str += '\t</channel>\n'
+			if item['id'] in self.pooq_id:
+				str += pooq.MakeEPG_ID(self.pooq_id[item['id']], 'MBC|%s' % item['id'])
+		return str
+
+	pooq_id = {
+			'01' : 'M01',
+			'02' : 'PM1',
+			'03' : 'PM2',
+		}

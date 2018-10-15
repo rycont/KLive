@@ -1,13 +1,8 @@
 # -*- coding: utf-8 -*-
-import urllib, urllib2
-import json 
-import os
-import pickle
-import time, datetime
 from util import *
 
 class POOQ:
-	COOKIE_FILENAME = 'pooq.txt'
+	COOKIE_FILENAME = 'pooq2.txt'
 
 	def __init__( self ):
 		self.DEVICE_TYPE_ID = 'pc'
@@ -50,11 +45,11 @@ class POOQ:
 			else:	
 				create_time = os.path.getctime(GetFilename(self.COOKIE_FILENAME))
 				diff = time.gmtime(time.time() - create_time)
-				if diff.tm_mday > 7:
+				if diff.tm_mday > 1:
 					ret = self.DoLogin(id, pw)
 					if ret is not None: WriteFile(GetFilename(self.COOKIE_FILENAME), ret)
 
-		except Exception as e:
+		except:
 			print(e)
 			pass
 
@@ -163,6 +158,9 @@ class POOQ:
 			response = urllib2.urlopen(request)
 			data = json.load(response, encoding='utf8')
 			surl = data['result']['signedUrl']
+			#print data
+			#print surl
+			#print credential
 			###############
 			filename = GetFilename('pooq_url.txt')
 			if surl is None:
@@ -215,7 +213,7 @@ class POOQ:
 		return str
 
 	# EPG
-	def MakeEPG(self, filename):
+	def MakeEPG(self, prefix, channel_list=None):
 		list = self.GetChannelList()
 		import datetime
 		startDate = datetime.datetime.now()
@@ -224,47 +222,46 @@ class POOQ:
 		endParam = endDate.strftime('%Y/%m/%d')
 
 		str = ''
+		count = 100
+		type_count = 0
 		for item in list:
-			str += '\t<channel id="POOQ|%s">\n' % item['id']
-			str += '\t\t<display-name>POOQ|%s</display-name>\n' % item['title']
+			count += 1
+			channel_number = count
+			channel_name = item['title']
+			if channel_list is not None:
+				if len(channel_list['POOQ']) == type_count: break
+				if item['id'] in channel_list['POOQ']:
+					type_count += 1
+					channel_number = channel_list['POOQ'][item['id']]['num']
+					if len(channel_list['POOQ'][item['id']]['name']) is not 0: channel_name = channel_list['POOQ'][item['id']]['name']
+				else:
+					continue
+			print('POOQ %s / %s make EPG ' % (count, len(list)))
+			str += '\t<channel id="POOQ|%s" video-src="%slc&type=POOQ&id=%s" video-type="HLS2">\n' % (item['id'], prefix, item['id'])
+			str += '\t\t<display-name>%s</display-name>\n' % channel_name
+			str += '\t\t<display-number>%s</display-number>\n' % channel_number
+			str += '\t\t<icon src="%s" />\n' % item['img']
 			str += '\t</channel>\n'
-			isShoppingChannel = False
-			if item['title'].lower().find('shop') != -1 or item['title'].find(u'쇼핑') != -1:
-				isShoppingChannel = True
+
 			url = 'http://wapie.pooq.co.kr/v1/epgs30/%s/?deviceTypeId=pc&marketTypeId=generic&apiAccessCredential=EEBE901F80B3A4C4E5322D58110BE95C&drm=WC&country=KOR&offset=0&limit=1000&startTime=%s+00:00&pooqzoneType=none&credential=none&endTime=%s+00:00' % (item['id'], startParam, endParam)
-			#print url
+			
 			request = urllib2.Request(url)
 			response = urllib2.urlopen(request)
 			data = json.load(response, encoding='utf8')
-			currentDate = startDate
+
 			for epg in data['result']['list']:
+				ep_startDate = datetime.datetime.strptime(epg['startDate'].replace('-',''), "%Y%m%d").date()
 				startTime = '%s%s' % (epg['startDate'].replace('-',''), epg['startTime'].replace(':', ''))
 				temp_startTime = int(epg['startTime'].replace(':', ''))
 				temp_endTime = int(epg['endTime'].replace(':', ''))
-				if temp_startTime > temp_endTime and epg['startDate'].replace('-','') == currentDate.strftime('%Y%m%d'): #전날에서 넘어온 경우 내일이 되버림.
-					currentDate = currentDate + datetime.timedelta(days=1)
-				currentDateStr = currentDate.strftime('%Y%m%d')
-				endTime = '%s%s' % (currentDateStr, epg['endTime'].replace(':', ''))
+				if temp_startTime > temp_endTime:
+					ep_startDate = ep_startDate + datetime.timedelta(days=1)
+				endTime = '%s%s' % (ep_startDate.strftime("%Y%m%d"), epg['endTime'].replace(':', ''))
+				if long(startTime) >= long(endTime) : continue
 				str += '\t<programme start="%s00 +0900" stop="%s00 +0900" channel="POOQ|%s">\n' %  (startTime, endTime, item['id'])
 				#str += '\t\t<title lang="kr"><![CDATA[%s]]></title>\n' % epg['programTitle']
 				str += '\t\t<title lang="kr">%s</title>\n' % epg['programTitle'].replace('<',' ').replace('>',' ')
-				
-				if item['isRadio'] == 'N' and isShoppingChannel == False:
-					tmp_img = 'http://img.pooq.co.kr/BMS/program_poster/201802/%s_210.jpg' % epg['programId']
-					try:
-						req2 = urllib2.Request(tmp_img)
-						res2 = urllib2.urlopen(req2)
-					except:
-						program = self.GetProgramInfo(epg['programId'])
-						if program == None:
-							tmp_img = None
-							#tmp_img = item['img']
-						else:
-							tmp_img = program['imageUrl']
-				else:
-					tmp_img = item['img']
-				if tmp_img is not None:
-					str += '\t\t<icon src="%s" />\n' % tmp_img
+				str += '\t\t<icon src="http://img.pooq.co.kr/BMS/program_poster/201802/%s_210.jpg" />\n' % epg['programId']
 				
 				age_str = '%s세 이상 관람가' % epg['age'] if epg['age'] != '0' else '전체 관람가'
 				str += '\t\t<rating system="KMRB"><value>%s</value></rating>\n' % age_str
@@ -281,20 +278,62 @@ class POOQ:
 						desc += '출연 : %s\n' % epg['programStaring'] 
 				if 'programSummary' in epg and epg['programSummary'] is not None:
 					#desc += epg['programSummary'].replace('<','&lt').replace('>','&gt')
-					desc += epg['programSummary']
+					#desc += epg['programSummary']
+					desc = epg['programSummary'] + '\n' + desc
+					desc == desc.strip()
 				str += '\t\t<desc lang="kr">%s</desc>\n' % desc.strip().replace('<',' ').replace('>',' ')
 				str += '\t</programme>\n'
+			time.sleep(SLEEP_TIME)
 		return str
 
-	def GetProgramInfo( self, programid):
-		#https://wapie.pooq.co.kr/v1/programs30/all/?credential=none&apiAccessCredential=EEBE901F80B3A4C4E5322D58110BE95C&country=KOR&deviceTypeId=pc&programId=C2301_PR10010790&marketTypeId=generic&drm=WC
-		try:
-			url = 'https://wapie.pooq.co.kr/v1/programs30/all/?credential=none&apiAccessCredential=EEBE901F80B3A4C4E5322D58110BE95C&country=KOR&deviceTypeId=pc&programId=%s&marketTypeId=generic&drm=WC' % (programid)
+	# 공중파에서 호출하며 하나의 ID에 대한 <programme> 태그만 넘긴다
+	def MakeEPG_ID(self, pooq_id, original_type_id):
+		import datetime
+		startDate = datetime.datetime.now()
+		startParam = startDate.strftime('%Y/%m/%d')
+		endDate = startDate + datetime.timedelta(days=2)
+		endParam = endDate.strftime('%Y/%m/%d')
+
+		str = ''
+		url = 'http://wapie.pooq.co.kr/v1/epgs30/%s/?deviceTypeId=pc&marketTypeId=generic&apiAccessCredential=EEBE901F80B3A4C4E5322D58110BE95C&drm=WC&country=KOR&offset=0&limit=1000&startTime=%s+00:00&pooqzoneType=none&credential=none&endTime=%s+00:00' % (pooq_id, startParam, endParam)
 			
-			request = urllib2.Request(url)
-			response = urllib2.urlopen(request)
-			data = json.load(response, encoding='utf8')
-			result = data['result']
-		except:
-			result = None
-		return result
+		request = urllib2.Request(url)
+		response = urllib2.urlopen(request)
+		data = json.load(response, encoding='utf8')
+
+		for epg in data['result']['list']:
+			ep_startDate = datetime.datetime.strptime(epg['startDate'].replace('-',''), "%Y%m%d").date()
+			startTime = '%s%s' % (epg['startDate'].replace('-',''), epg['startTime'].replace(':', ''))
+			temp_startTime = int(epg['startTime'].replace(':', ''))
+			temp_endTime = int(epg['endTime'].replace(':', ''))
+			if temp_startTime > temp_endTime:
+				ep_startDate = ep_startDate + datetime.timedelta(days=1)
+			endTime = '%s%s' % (ep_startDate.strftime("%Y%m%d"), epg['endTime'].replace(':', ''))
+			if long(startTime) >= long(endTime) : continue
+			str += '\t<programme start="%s00 +0900" stop="%s00 +0900" channel="%s">\n' %  (startTime, endTime, original_type_id)
+				#str += '\t\t<title lang="kr"><![CDATA[%s]]></title>\n' % epg['programTitle']
+			str += '\t\t<title lang="kr">%s</title>\n' % epg['programTitle'].replace('<',' ').replace('>',' ')
+			str += '\t\t<icon src="http://img.pooq.co.kr/BMS/program_poster/201802/%s_210.jpg" />\n' % epg['programId']
+				
+			age_str = '%s세 이상 관람가' % epg['age'] if epg['age'] != '0' else '전체 관람가'
+			str += '\t\t<rating system="KMRB"><value>%s</value></rating>\n' % age_str
+			desc = '등급 : %s\n' % age_str
+
+			staring = epg['programStaring'].strip() if 'programStaring' in epg and epg['programStaring'] is not None else None
+			if staring is not None and staring != '':
+				temp = staring.split(',')
+				if len(temp) > 0:
+					str += '\t\t<credits>\n'
+					for actor in temp:
+						str += '\t\t\t<actor>%s</actor>\n' % actor.strip().replace('<',' ').replace('>',' ')
+					str += '\t\t</credits>\n'
+					desc += '출연 : %s\n' % epg['programStaring'] 
+			if 'programSummary' in epg and epg['programSummary'] is not None:
+					#desc += epg['programSummary'].replace('<','&lt').replace('>','&gt')
+					#desc += epg['programSummary']
+				desc = epg['programSummary'] + '\n' + desc
+				desc == desc.strip()
+			str += '\t\t<desc lang="kr">%s</desc>\n' % desc.strip().replace('<',' ').replace('>',' ')
+			str += '\t</programme>\n'
+		time.sleep(SLEEP_TIME)
+		return str
