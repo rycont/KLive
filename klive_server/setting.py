@@ -1,28 +1,28 @@
 # -*- coding: utf-8 -*-
 # 주소 포트
-BIND_ADDR = 'soju6jan.iptime.org'
+BIND_ADDR = 'localhost'
 BIND_PORT = 9801
 
 # 푹
-POOQ_ID				= 'soju6jan'
-POOQ_PW				= 'dlgkdbs02!0'
-POOQ_QUALITY		= '5000'		# 5000 2000 1000 500
+POOQ_ID				= ''
+POOQ_PW				= ''
+POOQ_QUALITY		= '2000'		# 5000 2000 1000 500
 
 # 티빙
-TVING_ID			= 'soju6jan'
-TVING_PW			= 'dlgkdbs02!0'
-TVING_QUALITY		= 'stream50'	# stream50 stream40 stream30
+TVING_ID			= ''
+TVING_PW			= ''
+TVING_QUALITY		= 'stream40'	# stream50 stream40 stream30
 TVING_LOGIN_TYPE	= 'CJONE'		# CJONE TVING
 
 # 옥수수
-OKSUSU_ID			= 't01020125641'
-OKSUSU_PW			= 'dlgkdbs02!0'
-OKSUSU_QUALITY		= 'FHD'			# FHD HD SD
+OKSUSU_ID			= ''
+OKSUSU_PW			= ''
+OKSUSU_QUALITY		= 'HD'			# FHD HD SD
 
 # 올레 모바일 TV
-OLLEH_ID			= 'deuxist21c'
-OLLEH_PW			= 'bob0211!@#'
-OLLEH_QUALITY		= '4000'		# 4000 2000 1000
+OLLEH_ID			= ''
+OLLEH_PW			= ''
+OLLEH_QUALITY		= '2000'		# 4000 2000 1000
 
 # 커스텀
 USE_CUSTOM			= True 
