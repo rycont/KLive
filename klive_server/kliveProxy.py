@@ -111,6 +111,22 @@ def need_makeepg(filepath):
 		return True
 	return False
 
+@app.route('/m3upipe')
+def server_m3upipe():
+	current_path = os.path.dirname(os.path.abspath(__file__))
+	if USE_CUSTOM: _filepath = os.path.join(current_path, PATH_OUTPUT, USE_CUSTOM_M3U)
+	else: _filepath = os.path.join(current_path, PATH_OUTPUT, FILENAME_M3U)
+	if os.path.exists(_filepath): m3u = ReadFile(_filepath)
+
+	lines = m3u.split('\n')
+	ret = ''
+	for line in lines:
+		if line.startswith('http'):
+			ret += 'pipe://%s -i %s -c copy -f mpegts pipe:1\n' % ('ffmpeg', line)
+		else:
+			ret += line + '\n'
+	return ret
+
 
 
 if __name__ == '__main__':
