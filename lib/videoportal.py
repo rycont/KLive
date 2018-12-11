@@ -88,45 +88,46 @@ class VIDEOPORTAL:
 			str += '\t</channel>\n'
 
 
-		url = 'http://123.140.104.150/api/epg/v1/schedule/virtual?access_key=CE45020A8BC704127A6C&cp_id=S_LGU_HYUK0920&system_id=HDTV&SA_ID=M20110725000&STB_MAC=v201.1072.5000&NSC_TYPE=LTE&TC_IN=-1&TC_OUT=3&YOUTH_YN=N&POOQ_YN=N&HDTV_VIEW_GB=R&SERVICE_ID=&EPG_SDATE=&EPG_EDATE=&SID=001010005638&CLIENT_IP=192.168.0.1&OS_INFO=android_4.4.2&NW_INFO=WIFI&APP_TYPE=ROSA&DEV_MODEL=SM-N935F&CARRIER_TYPE=E&UI_VER=04.38.04&NOW_PAGE=25&PRE_PAGE=&MENU_NM=&CONTS_GB=&TERM_BINVER=3.8.118.0106'
-		request = urllib2.Request(url)
-		response = urllib2.urlopen(request)
-		tree = ET.parse(response)
-		root = tree.getroot()
-		idx = 0
-		for item in root.findall('list'):
+            url = 'http://123.140.104.150/api/epg/v1/schedule/virtual?access_key=CE45020A8BC704127A6C&cp_id=S_LGU_HYUK0920&system_id=HDTV&SA_ID=M20110725000&STB_MAC=v201.1072.5000&NSC_TYPE=LTE&TC_IN=-1&TC_OUT=3&YOUTH_YN=N&POOQ_YN=N&HDTV_VIEW_GB=R&SERVICE_ID=&EPG_SDATE=&EPG_EDATE=&SID=001010005638&CLIENT_IP=192.168.0.1&OS_INFO=android_4.4.2&NW_INFO=WIFI&APP_TYPE=ROSA&DEV_MODEL=SM-N935F&CARRIER_TYPE=E&UI_VER=04.38.04&NOW_PAGE=25&PRE_PAGE=&MENU_NM=&CONTS_GB=&TERM_BINVER=3.8.118.0106'
+            request = urllib2.Request(url)
+            response = urllib2.urlopen(request)
+            tree = ET.parse(response)
+            root = tree.getroot()
+            idx = 0
+            for item in root.findall('list'):
 
-			#continue
-			if channel_list is not None:
-				if item.findtext('service_id') not in channel_list['VIDEOPORTAL']: continue
-			
+                #continue
+                if channel_list is not None:
+                    if item.findtext('service_id') not in channel_list['VIDEOPORTAL']: continue
+                
 
-			idx += 1
-			print('VIDEOPORTAL-1 %s / %s make EPG' % (idx, len(root.findall('list'))))
-			if long(item.findtext('start_time')) >= long(item.findtext('end_time')): continue
-			str += '\t<programme start="%s +0900" stop="%s +0900" channel="VIDEOPORTAL|%s">\n' %  (item.findtext('start_time'), item.findtext('end_time'), item.findtext('service_id'))
-			str += '\t\t<title lang="kr">%s</title>\n' % item.findtext('program_title').replace('<',' ').replace('>',' ')
-			if item.findtext('thm_img_file') is not '':
-				str += '\t\t<icon src="%s%s" />\n' % (item.findtext('thm_img_url') ,item.findtext('thm_img_file') )
+                idx += 1
+                print('VIDEOPORTAL-1 %s / %s make EPG' % (idx, len(root.findall('list'))))
+                if long(item.findtext('start_time')) >= long(item.findtext('end_time')): continue
+                str += '\t<programme start="%s +0900" stop="%s +0900" channel="VIDEOPORTAL|%s">\n' %  (item.findtext('start_time'), item.findtext('end_time'), item.findtext('service_id'))
+                str += '\t\t<title lang="kr">%s</title>\n' % item.findtext('program_title').replace('<',' ').replace('>',' ')
+                if item.findtext('thm_img_file') is not '':
+                    str += '\t\t<icon src="%s%s" />\n' % (item.findtext('thm_img_url') ,item.findtext('thm_img_file') )
 
-			#age_str = '%s세 이상 관람가' % epg['ratingCd'] if epg['ratingCd'] != '0' and epg['ratingCd'] != '1' else '전체 관람가'
-			#str += '\t\t<rating system="KMRB"><value>%s</value></rating>\n' % age_str
-			#desc = '등급 : %s\n' % age_str
-			desc = ''
+                #age_str = '%s세 이상 관람가' % epg['ratingCd'] if epg['ratingCd'] != '0' and epg['ratingCd'] != '1' else '전체 관람가'
+                #str += '\t\t<rating system="KMRB"><value>%s</value></rating>\n' % age_str
+                #desc = '등급 : %s\n' % age_str
+                desc = ''
 
-			actorName = item.findtext('act').strip()				
-			actorName = actorName if actorName != '' else None
-			if actorName is not None: 
-				str += '\t\t<credits>\n'
-				temp = actorName.split(',')
-				for actor in temp: str += '\t\t\t<actor>%s</actor>\n' % actor.strip().replace('<',' ').replace('>',' ')
-				desc += '출연 : %s\n' % actorName
-				str += '\t\t</credits>\n'
-			if item.findtext('sid').strip() != '': desc += '%s\n' % item.findtext('sid').strip()
-			desc += '%s' % item.findtext('program_synopsis')
-			str += '\t\t<desc lang="kr">%s</desc>\n' % desc.strip().replace('<',' ').replace('>',' ')
-			str += '\t</programme>\n'
-			time.sleep(SLEEP_TIME)
+                actorName = item.findtext('act').strip()				
+                actorName = actorName if actorName != '' else None
+                if actorName is not None: 
+                    str += '\t\t<credits>\n'
+                    temp = actorName.split(',')
+                    for actor in temp: str += '\t\t\t<actor>%s</actor>\n' % actor.strip().replace('<',' ').replace('>',' ')
+                    desc += '출연 : %s\n' % actorName
+                    str += '\t\t</credits>\n'
+                if item.findtext('sid').strip() != '': desc += '%s\n' % item.findtext('sid').strip()
+                desc += '%s' % item.findtext('program_synopsis')
+                str += '\t\t<desc lang="kr">%s</desc>\n' % desc.strip().replace('<',' ').replace('>',' ')
+                str += '\t</programme>\n'
+                time.sleep(SLEEP_TIME)
+                
 		return str
 	
 
