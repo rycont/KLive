@@ -205,6 +205,7 @@ class TVING:
 				print('TVING %s / %s make EPG' % (count, len(list)))
 				str += '\t<channel id="TVING|%s" video-src="%surl&type=TVING&id=%s" video-type="HLS">\n' % (item['id'], prefix, item['id'])
 				str += '\t\t<display-name>%s</display-name>\n' % channel_name
+				str += '\t\t<display-name>%s</display-name>\n' % channel_number
 				str += '\t\t<display-number>%s</display-number>\n' % channel_number
 				str += '\t\t<icon src="%s" />\n' % item['img']
 				str += '\t</channel>\n'

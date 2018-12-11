@@ -281,6 +281,7 @@ class OKSUSU:
 				print('OKSUSU RADIO %s / %s make EPG' % (count, len(list)))
 				str += '\t<channel id="OKSUSU|%s" video-src="%slc&type=OKSUSU&id=%s" video-type="HLS2">\n' % (item['id'], prefix, item['id'])
 				str += '\t\t<display-name>%s</display-name>\n' % channel_name
+				str += '\t\t<display-name>%s</display-name>\n' % channel_number
 				str += '\t\t<display-number>%s</display-number>\n' % channel_number
 				str += '\t\t<icon src="%s" />\n' % item['img']
 				str += '\t</channel>\n'

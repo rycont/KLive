@@ -76,6 +76,7 @@ class RADIO1:
 			print('RADIO1 %s / %s make EPG' % (count, len(list)))
 			str += '\t<channel id="RADIO1|%s" video-src="%surl&type=RADIO1&id=%s" video-type="HLS">\n' % (item['id'], prefix, item['id'])
 			str += '\t\t<display-name>%s</display-name>\n' % channel_name
+			str += '\t\t<display-name>%s</display-name>\n' % channel_number
 			str += '\t\t<display-number>%s</display-number>\n' % channel_number
 			if len(item['img']) != 0: str += '\t\t<icon src="%s" />\n' % item['img']
 			str += '\t</channel>\n'
