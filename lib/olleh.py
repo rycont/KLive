@@ -159,6 +159,7 @@ class OLLEH:
 			print('OLLEH %s / %s make EPG' % (count, len(list)))
 			str += '\t<channel id="OLLEH|%s" video-src="%slc&type=OLLEH&id=%s" video-type="HLS2">\n' % (channel['id'], prefix, channel['id'])
 			str += '\t\t<display-name>%s</display-name>\n' % channel_name
+			str += '\t\t<display-name>%s</display-name>\n' % channel_number
 			str += '\t\t<display-number>%s</display-number>\n' % channel_number
 			str += '\t\t<icon src="%s" />\n' % channel['img']
 			str += '\t</channel>\n'

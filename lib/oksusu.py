@@ -216,8 +216,8 @@ class OKSUSU:
 
 
 			for epg in channel['programs']:
-				startTime = datetime.datetime.fromtimestamp(float(epg['startTime'])/1000.).strftime('%Y%m%d%H%M%S')
-				endTime = datetime.datetime.fromtimestamp(float(epg['endTime'])/1000.).strftime('%Y%m%d%H%M%S')
+				startTime = datetime.datetime.fromtimestamp(float(epg['startTime'])/1000.+3600*9).strftime('%Y%m%d%H%M%S')
+				endTime = datetime.datetime.fromtimestamp(float(epg['endTime'])/1000.+3600*9).strftime('%Y%m%d%H%M%S')
 				if long(startTime) >= long(endTime): continue
 				str += '\t<programme start="%s +0900" stop="%s +0900" channel="OKSUSU|%s">\n' %  (startTime, endTime, channel['serviceId'])
 				str += '\t\t<title lang="kr">%s</title>\n' % epg['programName'].replace('<',' ').replace('>',' ')
@@ -281,6 +281,7 @@ class OKSUSU:
 				print('OKSUSU RADIO %s / %s make EPG' % (count, len(list)))
 				str += '\t<channel id="OKSUSU|%s" video-src="%slc&type=OKSUSU&id=%s" video-type="HLS2">\n' % (item['id'], prefix, item['id'])
 				str += '\t\t<display-name>%s</display-name>\n' % channel_name
+				str += '\t\t<display-name>%s</display-name>\n' % channel_number
 				str += '\t\t<display-number>%s</display-number>\n' % channel_number
 				str += '\t\t<icon src="%s" />\n' % item['img']
 				str += '\t</channel>\n'
