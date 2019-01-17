@@ -216,8 +216,8 @@ class OKSUSU:
 
 
 			for epg in channel['programs']:
-				startTime = datetime.datetime.fromtimestamp(float(epg['startTime'])/1000.+3600*9).strftime('%Y%m%d%H%M%S')
-				endTime = datetime.datetime.fromtimestamp(float(epg['endTime'])/1000.+3600*9).strftime('%Y%m%d%H%M%S')
+				startTime = datetime.datetime.fromtimestamp(float(epg['startTime'])/1000.).strftime('%Y%m%d%H%M%S')
+				endTime = datetime.datetime.fromtimestamp(float(epg['endTime'])/1000.).strftime('%Y%m%d%H%M%S')
 				if long(startTime) >= long(endTime): continue
 				str += '\t<programme start="%s +0900" stop="%s +0900" channel="OKSUSU|%s">\n' %  (startTime, endTime, channel['serviceId'])
 				str += '\t\t<title lang="kr">%s</title>\n' % epg['programName'].replace('<',' ').replace('>',' ')
