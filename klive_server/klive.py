@@ -184,15 +184,12 @@ def MakeCustomM3U(list):
 	_FILENAME_M3U = os.path.join(current_path, PATH_OUTPUT, FILENAME_M3U)
 	_USE_CUSTOM_M3U = os.path.join(current_path, PATH_OUTPUT, USE_CUSTOM_M3U)
 	m3u_list = ParsingM3U(_FILENAME_M3U )
-	str_result = "#EXTM3U\n"
+	str = "#EXTM3U\n"
 	for item in list['all']:
 		if item['id_str'] in m3u_list:
-			number_string = str(item['num'])
-			line_string = '%s\n' % (m3u_list[item['id_str']]['line'])
-			line_string = line_string.replace(" tvg-logo", ' tvh-chnum="%s" tvg-logo' % number_string) 
-			str_result += line_string
-			str_result += '%s\n' % m3u_list[item['id_str']]['url']
-	WriteFile(_USE_CUSTOM_M3U, str_result)
+			str += '%s\n' % m3u_list[item['id_str']]['line']
+			str += '%s\n' % m3u_list[item['id_str']]['url']
+	WriteFile(_USE_CUSTOM_M3U, str)
 
 
 def ParsingM3U(file):

@@ -39,17 +39,6 @@ def server_epg():
 		#Response(ret, mimetype='text/xml')
 		return ret
 
-@app.route('/epgall')
-def server_epgall():
-	current_path = os.path.dirname(os.path.abspath(__file__))
-	#if USE_CUSTOM: _filepath = os.path.join(current_path, PATH_OUTPUT, USE_CUSTOM_EPG)
-	#else: _filepath = os.path.join(current_path, PATH_OUTPUT, FILENAME_EPG)
-	_filepath = os.path.join(current_path, PATH_OUTPUT, FILENAME_EPG)
-	if os.path.exists( _filepath ): 
-		ret = ReadFile( _filepath )
-		#Response(ret, mimetype='text/xml')
-		return ret		
-
 @app.route('/url')
 def server_url():
 	mode = request.args.get('mode')
@@ -106,10 +95,8 @@ def thread_main():
 				if first or hour < 1 or need_makeepg(filepath):
 					print('condition : %s %s' % (first, hour))
 					MakeM3U(prefix_m3u)
-					#if USE_CUSTOM: MakeCustom(prefix_epg)
-					#else: MakeEPG(prefix_epg)
-					MakeCustom(prefix_epg)
-					MakeEPG(prefix_epg)
+					if USE_CUSTOM: MakeCustom(prefix_epg)
+					else: MakeEPG(prefix_epg)
 			first = False
 		except:
 			exc_info = sys.exc_info()
