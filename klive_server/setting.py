@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# 주소 포트
+# 주소  포트
 BIND_ADDR = 'localhost'
 BIND_PORT = 9801
 
