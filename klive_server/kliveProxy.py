@@ -47,7 +47,7 @@ def server_url():
 	ret = GetURL(type, id)
 	# everyon
 	if type == 'EVERYON':
-		return EVERYON().ReturnUrl(ret)
+		return ret
 	elif type == 'TVING' and id[0] == 'C' and ret.find('index.m3u8') == -1:
 		return TVING().ReturnUrl(ret)
 	print('TYPE : %s' % type)

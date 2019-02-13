@@ -1,86 +1,167 @@
 # -*- coding: utf-8 -*-
 from util import *
+from datetime import datetime, timedelta
+
+everyon_url_data = None
 
 class EVERYON:
 	EVERYON_LIST = ['전체채널|all', '종편/뉴스|20100', '경제/정보/해외|20300', '레저/스포츠/게임|20400', '드라마/보험|20500', '연예/오락|20600', '여성/어린이/교육|20700', '종교/지역/공공|20800','홈쇼핑|20200']
 
 	# List
 	def  GetChannelList(self):
-		ret = []
-		for cate in self.EVERYON_LIST:
-			temp = cate.split('|')
-			if temp[1] != 'all':
-				pageNo = 1
-				while True:
-					hasMore, list = self.GetChannelListFromCate(temp[1], pageNo)
-					for item in list:
-						ret.append(item)
-					if hasMore == 'N': break
-					pageNo += 1
-		return ret
+		return self.GetChannelListFromCate('all', 'all')
 
 
 
-	def GetChannelListFromCate(self, cate, pageNo='1'):
+	def GetChannelListFromCate(self, menu_id, sub_id):
 		url  = 'http://www.everyon.tv/main/proc/ajax_ch_list.php'
-		params = { 'chNum' : '', 'cate':'', 'sCate':cate, 'chNum':'', 'chNm':'', 'page':pageNo, 'perPage':'20', 'srchTxt':''  }
+		
+		params = { 'chNum' : '', 'cate':'', 'sCate':menu_id, 'mCate': sub_id, 'chNm':'', 'srchTxt':''  }
 		postdata = urllib.urlencode( params )
 		request = urllib2.Request(url, postdata)
 		request.add_header('Cookie', 'etv_api_key=88abc0e1c8e61c8c3109788ec8392c7fd86c16765fc0b80d5f2366c84c894203')
 		response = urllib2.urlopen(request)
 		data = response.read()
-		#print(data)
-		hasMore = 'Y' if int(data.split('|')[1]) > int(pageNo) * 20 else 'N'
+		
 		regax = 'thumb\"\stitle\=\"(.*?)\".*\s*.*selCh\(\'(.*?)\'.*\s*<img\ssrc\=\"(.*?)\"'
 		regax2 = 'ch_name\"\stitle\=\"(.*?)\"'
 		r = re.compile(regax)
 		r2 = re.compile(regax2)
 		m = r.findall(data)
 		m2 = r2.findall(data)
-		list = []
+		
+		listChannel = []
 		#for item in m:
 		for i in range(len(m)-1):
-			info = {}
-			info['title'] = m[i][0].replace(',', ' ')
-			info['id'] = m[i][1]
-			info['img'] = m[i][2]
-			info['summary'] = m2[i]
-			list.append(info)
-		return hasMore, list
+			channel = {}
+			channel['title'] = m[i][0].replace(',', ' ')
+			channel['id'] = m[i][1]
+			channel['img'] = m[i][2]
+			channel['summary'] = m2[i]
+			listChannel.append(channel)
+		return listChannel
+	
+	def MakeTSFile(self, url, awcookie, awcookie2):
+		request = urllib2.Request(url)
+		request.add_header('Cookie', awcookie)
+		response = urllib2.urlopen(request)
+		data = response.read()
 
+		url2 = url[:url.rfind('/')]
+
+		lines = data.split('\n')
+		data = ''
+		bFirst = True
+		for line in lines:
+			if bFirst : bFirst = False
+			else: data += '\n'
+
+			if line.find('.ts') != -1: data += '%s/%s?%s'%(url2,line,awcookie2)
+			else: data += line	
+			
+		return data	
 	
 	# URL
 	def GetURLFromSC(self, id):
-		url  = 'http://www.everyon.tv/main/proc/get_ch_data.php'
-		params = { 'chId' : id }
-		postdata = urllib.urlencode( params )
-		request = urllib2.Request(url, postdata)
-		request.add_header('Cookie', 'etv_api_key=88abc0e1c8e61c8c3109788ec8392c7fd86c16765fc0b80d5f2366c84c894203')
-		response = urllib2.urlopen(request)
-		#data = json.load(response, encoding='utf8')
-		#url2 = data['medias'][0]['url'] if len(data['medias']) > 0 else None	
-		#return url2
-		ret = response.read()
-		#print ret
-		cookie = response.info().getheader('Set-Cookie')
+		url = ''
+		awcookie = ''
+		awcookie2 = ''
+		global everyon_url_data
 		
-		info = {}
-		info['Key-Pair-Id'] = ''
-		info['Policy'] = ''
-		info['Signature'] = ''
+		if everyon_url_data is not None:
+			if id in everyon_url_data.keys(): 
+				prev_time = everyon_url_data[id]['time']				
+				current_time = datetime.now()
+				
+				delta_time = current_time - prev_time
+				#쿠키값을 4분 55초 단위로 갱신(5분 후에 자동으로 쿠키값이 바뀌고 있음)
+				if delta_time.total_seconds() < 295:
+					try:
+						url = everyon_url_data[id]['url']
+						awcookie = everyon_url_data[id]['cookie']
+						awcookie2 = everyon_url_data[id]['params']
+					
+						data = self.MakeTSFile(url, awcookie, awcookie2)
+						print('EVERYON (%s) data2 :\n%s' % (id, data))	
+						return data
+						#return self.MakeTSFile(url, awcookie, awcookie2)
+					except:
+						url = ''
+						awcookie = ''
+						awcookie2 = ''
+				else:
+					print('EVERYON(%s) : 쿠키값 변경' % id)
+						
+		if url == '':
+			try:
+				params = { 'chId' : id }
+				postdata = urllib.urlencode( params )
+				request = urllib2.Request('http://www.everyon.tv/main/proc/get_ch_data.php', postdata)
+				request.add_header('Cookie', 'etv_api_key=88abc0e1c8e61c8c3109788ec8392c7fd86c16765fc0b80d5f2366c84c894203')
+				response = urllib2.urlopen(request)
+				url = response.read()
+				
+				response.close()
+				
+				cookie = response.info().getheader('Set-Cookie')
+				
+				for c in cookie.split(','):
+					c = c.strip()
+					if c.startswith('CloudFront-Key-Pair-Id'):
+						awcookie = c.split(';')[0] + ';'
+					if c.startswith('CloudFront-Policy'):
+						awcookie += c.split(';')[0] + ';'
+					if c.startswith('CloudFront-Signature'):
+						awcookie += c.split(';')[0]
+					
+				awcookie2 = awcookie.replace('CloudFront-', '')
+				awcookie2 = awcookie2.replace(';', '&')
+				
+				if everyon_url_data is None:
+					everyon_url_data = {}
+				
+				if id not in everyon_url_data.keys():
+					request = urllib2.Request(url)
+					request.add_header('Cookie', awcookie)
+					response = urllib2.urlopen(request)
+					lines = response.read().split('\n')
+				
+					response.close()
+				
+					url2 = url[:url.rfind('/')]
+					url = ''
+					for line in lines:
+						if line.find('m3u8') != -1:
+							url = '%s/%s' % (url2, line)
+							break
 
-		for c in cookie.split(','):
-			c = c.strip()
-			if c.startswith('CloudFront-Key-Pair-Id'):
-				info['Key-Pair-Id'] = c.split(';')[0].split('=')[1]
-			if c.startswith('CloudFront-Policy'):
-				info['Policy'] = c.split(';')[0].split('=')[1]
-			if c.startswith('CloudFront-Signature'):
-				info['Signature'] = c.split(';')[0].split('=')[1]
-		ret = ret.replace('live.m3u8', 'live_hd.m3u8')
-		tmp = 'Key-Pair-Id=%s;Policy=%s;Signature=%s' % (info['Key-Pair-Id'], info['Policy'], info['Signature'])
-		ret = '%s?Key-Pair-Id=%s&Policy=%s&Signature=%s' % (ret, info['Key-Pair-Id'], info['Policy'], info['Signature'])
-		return ret
+					everyon_url_data[id] = {}
+					everyon_url_data[id]['url'] = url
+				else:
+					url = everyon_url_data[id]['url']
+
+				everyon_url_data[id]['cookie'] = awcookie
+				everyon_url_data[id]['params'] = awcookie2
+				everyon_url_data[id]['time'] = datetime.now()
+
+				print('EVERYON(%s) url : %s' % (id, url))
+			except:
+				url = ''
+				awcookie = ''
+				awcookie2 = ''			
+
+		data = ''
+		if url == '':
+			print('EVERYON(%s) : 정보가져오는데 실패' % id)
+		else:
+			try:
+				data = self.MakeTSFile(url, awcookie, awcookie2)			
+				print('EVERYON(%s) data1 :\n%s' % (id, data))
+			except:
+				data = ''
+				print('EVERYON(%s) : 정보가져오는데 실패' % id)
+			
+		return data
 
 		#return ret + "|" + tmp
 
