@@ -3,6 +3,7 @@ from util import *
 
 class OLLEH:
 	COOKIE_FILENAME = 'olleh2.txt'
+	USER_AGENT = 'OMS (compatible;ServiceType/OTM;DeviceType/WIN8PAD;DeviceModel/AllSeries;OSType/WINM;OSVersion/8.1.0;AppVersion/1.2.1.9))'
 
 	# Login
 	def DoLoginFromSC(self, id, pw):
@@ -20,7 +21,7 @@ class OLLEH:
 	def DoLogin(self, id, pw ):
 		timestamp = str(datetime.datetime.today().strftime('%Y%m%d%H%M%S%f')[:-3])
 		transactionid = str(timestamp) + '000000000000001'
-		headers = {'User-Agent': 'OMS (compatible;ServiceType/OTM;DeviceType/WIN8PAD;DeviceModel/AllSeries;OSType/WINM;OSVersion/8.1.0;AppVersion/1.2.1.5))', 'Transactionid': transactionid, 'Requesthostname': 'android.otm.kt.com', 'Timestamp': timestamp, 'Applicationkey': 'otmapp42test', 'Content-Type': 'application/json'}
+		headers = {'User-Agent': self.USER_AGENT, 'Transactionid': transactionid, 'Requesthostname': 'android.otm.kt.com', 'Timestamp': timestamp, 'Applicationkey': 'otmapp42test', 'Content-Type': 'application/json'}
 		try:
 			url = 'https://omas.megatvdnp.co.kr/login/olleh'
 			params = {'userId': id, 'userPwd': pw}
@@ -70,8 +71,9 @@ class OLLEH:
 	# List
 	def GetChannelList(self):
 		result = []
+		cookie = self.GetLoginData()
 		url = 'http://menu.megatvdnp.co.kr:38080/app5/0/api/epg_chlist?istest=0&category_id=1'
-		request = urllib2.Request(url, headers = {'User-Agent':'OMS (compatible;ServiceType/OTM;DeviceType/WIN8PAD;DeviceModel/AllSeries;OSType/WINM;OSVersion/8.1.0;AppVersion/1.2.1.5))'})
+		request = urllib2.Request(url, headers = {'User-Agent': self.USER_AGENT})
 		response = urllib2.urlopen(request)
 		data = json.load(response, encoding="utf-8")
 		for item in data['data']['list'][0]['list_channel']:
@@ -96,7 +98,7 @@ class OLLEH:
 			#ReadFile(GetFilename(self.COOKIE_FILENAME))
 			params = {'istest': '0', 'ch_no': id, 'bit_rate': 'S', 'bit_rate_option': quality, 'user_model': 'Redmi', 'user_os': '6.0.1', 'user_type': 'Android', 'user_net': 'WIFI'}
 			url = 'http://menu.megatvdnp.co.kr:38080/app5/0/api/epg_play?%s' % urllib.urlencode( params )
-			request = urllib2.Request(url, headers = {'Cookie': cookie, 'User-Agent':'OMS (compatible;ServiceType/OTM;DeviceType/WIN8PAD;DeviceModel/AllSeries;OSType/WINM;OSVersion/8.1.0;AppVersion/1.2.1.5))'})
+			request = urllib2.Request(url, headers = {'Cookie': cookie, 'User-Agent': self.USER_AGENT})
 			response = urllib2.urlopen(request)
 			data = json.load(response, encoding="utf-8")
 			return data['data']['live_url']
@@ -165,7 +167,7 @@ class OLLEH:
 			str += '\t</channel>\n'
 
 			url = 'http://menu.megatvdnp.co.kr:38080/app5/0/api/epg_proglist?istest=&ch_no=%s' % channel['id']
-			request = urllib2.Request(url, headers = {'User-Agent':'OMS (compatible;ServiceType/OTM;DeviceType/WIN8PAD;DeviceModel/AllSeries;OSType/WINM;OSVersion/8.1.0;AppVersion/1.2.1.5))'})
+			request = urllib2.Request(url, headers = {'User-Agent' : self.USER_AGENT})
 			response = urllib2.urlopen(request)
 			data = json.load(response, encoding="utf-8")
 	
@@ -215,13 +217,11 @@ class OLLEH:
 			time.sleep(SLEEP_TIME)
 		return str
 
-	#라이브 카테고리 리스트
+
 	def GetLiveCategory(self):
 		result = []
-		#cookie = ReadFile(GetFilename(self.COOKIE_FILENAME))
 		url = 'http://menu.megatvdnp.co.kr:38080/app5/0/api/epg_chCategory?istest=0'
-		#request = urllib2.Request(url, headers = {'Cookie': cookie, 'User-Agent':'OMS (compatible;ServiceType/OTM;DeviceType/WIN8PAD;DeviceModel/AllSeries;OSType/WINM;OSVersion/8.1.0;AppVersion/1.2.1.5))'})
-		request = urllib2.Request(url, headers = {'User-Agent':'OMS (compatible;ServiceType/OTM;DeviceType/WIN8PAD;DeviceModel/AllSeries;OSType/WINM;OSVersion/8.1.0;AppVersion/1.2.1.5))'})
+		request = urllib2.Request(url, headers = {'User-Agent' : self.USER_AGENT})
 		response = urllib2.urlopen(request)
 		data = json.load(response, encoding="utf-8")
 		for item in data['data']['list']:
@@ -231,11 +231,10 @@ class OLLEH:
 			result.append(info)
 		return result
 	
-	#라이브 카테고리 리스트
 	def GetVodList(self, menu_id, page):
 		result = []
 		url = 'http://menu.megatvdnp.co.kr:38080/app5/0/api/vod_list?istest=0&menu_id=%s&orderby=regdate&page=%s&count=30&adult_yn=Y' % (menu_id, page)
-		request = urllib2.Request(url, headers = {'User-Agent':'OMS (compatible;ServiceType/OTM;DeviceType/WIN8PAD;DeviceModel/AllSeries;OSType/WINM;OSVersion/8.1.0;AppVersion/1.2.1.5))'})
+		request = urllib2.Request(url, headers = {'User-Agent' : self.USER_AGENT})
 		response = urllib2.urlopen(request)
 		data = response.read()
 		#print(url)
@@ -251,3 +250,8 @@ class OLLEH:
 		return result
 		"""
 
+
+if __name__ == '__main__':
+	olleh = OLLEH()
+	olleh.GetChannelList()
+	print olleh.GetURL('280', '4000')
