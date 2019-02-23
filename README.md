@@ -6,7 +6,7 @@ KLive는 라이브 방송을 제공하는 사이트 및 앱을 크롤링하는 p
 - KLive Server + Android TV App
 
 # 메뉴얼
-https://soju6jan.github.io/klive
+https://soju6jan.github.io/category/klive/
 
 
 ---

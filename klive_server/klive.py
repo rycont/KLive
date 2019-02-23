@@ -20,7 +20,8 @@ from videoportal import *
 import operator
 def MakeM3U(url):
 	print('START MakeM3U : %s' % url)
-	temp = CONTENTS_LIST.split('|')
+	temp = filter(lambda x: not x in DISABLE_CONTENTS, CONTENTS_LIST.split('|'))
+	print('DISABLED CONTENT: ', DISABLE_CONTENTS)
 	str = '#EXTM3U\n'
 	for item in temp:
 		if item == 'KBS': str += KBS().MakeM3U(url)
@@ -74,7 +75,7 @@ def MakeEPG(prefix, list=None):
 		_EPG = os.path.join(current_path, PATH_OUTPUT, USE_CUSTOM_EPG)
 		_EPG_TEMP = os.path.join(current_path, PATH_OUTPUT, USE_CUSTOM_EPG+'.tmp')
 	
-	temp = CONTENTS_LIST.split('|')
+	temp = filter(lambda x: not x in DISABLE_CONTENTS, CONTENTS_LIST.split('|'))
 	str = ''
 	str += '<?xml version="1.0" encoding="UTF-8"?>\n'
 	str += '<!DOCTYPE tv SYSTEM "xmltv.dtd">\n'
